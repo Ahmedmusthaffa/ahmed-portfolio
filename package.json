@@ -1,0 +1,18 @@
+{
+  "name": "ahmed-portfolio",
+  "version": "2.0.0",
+  "description": "Full Stack Developer Portfolio & Production Backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/backend.test.js",
+    "audit": "python strix_security_audit.py"
+  },
+  "keywords": ["portfolio", "full-stack", "developer", "nodejs"],
+  "author": "Ahmed Musthaffa",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "nodemailer": "^9.0.5"
+  }
+}

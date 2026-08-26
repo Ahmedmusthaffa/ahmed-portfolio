@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ahmed-portfolio
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OWNER_EMAIL
+        value: ahmedmusthaffa02@gmail.com

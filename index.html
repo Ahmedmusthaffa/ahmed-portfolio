@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Full Stack Developer Portfolio</title>
+  <link rel="stylesheet" href="styles.css?v=3.4">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Minimalist Loading Screen -->
+  <div id="loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">Loading Experience... <span id="loader-percent">0%</span></div>
+      <div class="loader-bar-bg">
+        <div id="loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fixed Background Canvas for 240 Frame Video Scroll Animation -->
+  <div id="canvas-container">
+    <canvas id="frame-canvas"></canvas>
+    <div class="canvas-overlay-glow"></div>
+  </div>
+
+  <!-- Overlay Content Wrapper -->
+  <div class="content-wrapper">
+    <!-- Navbar -->
+    <header class="navbar">
+      <div class="nav-brand">&lt;/DevPortfolio&gt;</div>
+      <div class="nav-right">
+        <div id="round-code-badge" class="round-code-badge" title="Touch me!">&lt;/&gt;</div>
+        <div class="badge-interactive-tooltip">Ahmed • Full Stack ⚡</div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+      <div class="hero-glass-container">
+        <div class="hero-top-grid">
+          <div class="hero-title-area">
+            <span class="hero-subtitle">Hey, I'm a</span>
+            <h1 class="hero-main-heading">Full<br>Stack<br>Developer</h1>
+          </div>
+        </div>
+
+        <!-- Shifted down slightly with increased vertical margin -->
+        <!-- Services Floating Row (Reference Image Style) -->
+        <div class="services-row">
+          <div class="service-item">
+            <div class="service-icon-wrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+            </div>
+            <span class="service-name">CREATIVE DESIGN</span>
+            <p class="service-desc">Crafting modern, intuitive, and responsive user interfaces that engage users.</p>
+          </div>
+
+          <div class="service-item">
+            <div class="service-icon-wrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+            </div>
+            <span class="service-name">FULL STACK ARCHITECTURE</span>
+            <p class="service-desc">Scalable microservices, REST & GraphQL APIs, and reliable database designs.</p>
+          </div>
+
+          <div class="service-item">
+            <div class="service-icon-wrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            </div>
+            <span class="service-name">CLEAN CODE</span>
+            <p class="service-desc">Writing testable, maintainable code adhering to solid architectural patterns.</p>
+          </div>
+
+          <div class="service-item">
+            <div class="service-icon-wrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            </div>
+            <span class="service-name">FAST SUPPORT & DEPLOY</span>
+            <p class="service-desc">Automated CI/CD workflows, smooth cloud deployments, and ongoing support.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHO AM I ? Section (Modern Split 2-Column Layout) -->
+    <section id="about" class="who-am-i-section">
+      <div class="who-am-i-layout">
+        <!-- Left Column: Header & Identity -->
+        <div class="who-left-col">
+          <span class="who-tag">▶ About Me</span>
+          <h2 class="who-am-i-title">WHO AM I ?</h2>
+          <div class="who-identity-block" style="display: inline-flex; flex-direction: column; align-items: center; width: fit-content;">
+            <div class="who-am-i-name" style="text-align: center; margin-bottom: 0.8rem;">Ahmed</div>
+            <div class="who-highlights-list" style="display: flex; flex-direction: column; gap: 0.85rem; width: 100%;">
+              <div class="who-highlight-item">
+                <span class="highlight-bullet">⚡</span>
+                <span>Full Stack Web Architecture</span>
+              </div>
+              <div class="who-highlight-item">
+                <span class="highlight-bullet">💻</span>
+                <span>Clean, Maintainable & Scalable Code</span>
+              </div>
+              <div class="who-highlight-item">
+                <span class="highlight-bullet">🚀</span>
+                <span>End-to-End Product Delivery</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Developer Narrative -->
+        <div class="who-right-col">
+          <div class="who-story-card">
+            <p class="who-am-i-text">
+              I am a full stack developer specialized in building scalable, modern web applications.
+            </p>
+            <p class="who-am-i-text">
+              What drives me is building a feature from scratch and seeing it work completely. I love creating smooth front-end experiences and designing fast back-end systems. Being a full-stack developer lets me connect both worlds to solve problems independently.
+            </p>
+            <p class="who-am-i-text">
+              I am always eager to learn emerging technologies, collaborate on impactful projects, and turn complex ideas into robust, high-performance digital products.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skills & Tools Side-by-Side 2-Column Grid -->
+      <div class="skills-tools-split-container">
+        <!-- Left Column: Skills -->
+        <div class="skills-showcase-column">
+          <div class="showcase-col-header">
+            <span class="showcase-tag">⚡ Tech Stack</span>
+            <h3 class="skills-block-title">Skills</h3>
+          </div>
+          <div class="skills-visual-grid">
+            <!-- HTML5 -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 0h21l-1.91 21.463-8.59 2.537-8.59-2.537zM4.05 4.364l1.372 15.42 6.578 1.942 6.578-1.942 1.372-15.42zm4.336 2.727h7.228l-.245 2.727h-4.01l.142 1.636h3.623l-.687 7.746-2.437.763-2.437-.763-.163-1.836h-2.18l.295 3.327 4.485 1.403 4.485-1.403 1.09-12.273h-8.884z"/></svg>
+                <div class="skill-circle-badge badge-red"><span>98%</span></div>
+              </div>
+              <h4 class="skill-name-label">HTML5</h4>
+            </div>
+
+            <!-- CSS3 -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 0h21l-1.91 21.463-8.59 2.537-8.59-2.537zM4.05 4.364l1.372 15.42 6.578 1.942 6.578-1.942 1.372-15.42zm4.184 2.727h7.532l-.245 2.727h-4.314l.142 1.636h3.927l-.687 7.746-2.437.763-2.437-.763-.163-1.836h-2.18l.295 3.327 4.485 1.403 4.485-1.403 1.09-12.273h-9.188z"/></svg>
+                <div class="skill-circle-badge badge-blue"><span>95%</span></div>
+              </div>
+              <h4 class="skill-name-label">CSS3</h4>
+            </div>
+
+            <!-- JavaScript -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0h24v24H0zM12.012 16.59c.28 1.09 1.15 1.76 2.37 1.76 1.46 0 2.35-.76 2.35-1.81 0-1.25-.87-1.74-2.42-2.39-2.23-.94-3.71-1.96-3.71-4.36 0-2.19 1.69-3.88 4.34-3.88 2.06 0 3.53.94 4.14 2.45l-2.22 1.28c-.34-.78-.89-1.24-1.92-1.24-1.04 0-1.73.66-1.73 1.54 0 .99.64 1.43 2.06 2.03 2.53 1.09 4.09 2.04 4.09 4.74 0 2.72-2.11 4.22-4.94 4.22-2.78 0-4.48-1.42-5.01-3.21zm-6.666-.31c.21.72.63 1.25 1.25 1.63.62.38 1.41.57 2.36.57.34 0 .68-.04 1.02-.12.34-.08.64-.22.9-.42.26-.2.47-.46.63-.78.16-.32.24-.71.24-1.17V8.09h2.61v8.03c0 .87-.19 1.62-.57 2.25-.38.63-.91 1.13-1.59 1.5-.68.37-1.48.56-2.4.56-.99 0-1.89-.22-2.7-.66-.81-.44-1.44-1.08-1.89-1.92z"/></svg>
+                <div class="skill-circle-badge badge-yellow"><span>96%</span></div>
+              </div>
+              <h4 class="skill-name-label">JavaScript</h4>
+            </div>
+
+            <!-- TypeScript -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M1.5 0h21l-1.91 21.463-8.59 2.537-8.59-2.537zM11 6H5v2.2h2v7.8h2.2V8.2H11zm7.5 4.5h-4.2v1.8h3.2c.8 0 1.2.4 1.2 1.2v2.3c0 .8-.4 1.2-1.2 1.2h-4.2v-2.2h3.2v-.8h-3.2c-.8 0-1.2-.4-1.2-1.2v-2.3c0-.8.4-1.2 1.2-1.2h5.2z"/></svg>
+                <div class="skill-circle-badge badge-blue"><span>94%</span></div>
+              </div>
+              <h4 class="skill-name-label">TypeScript</h4>
+            </div>
+
+            <!-- React -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="12" rx="11" ry="4.2" transform="rotate(0 12 12)" fill="none" stroke="currentColor" stroke-width="1.2"/><ellipse cx="12" cy="12" rx="11" ry="4.2" transform="rotate(60 12 12)" fill="none" stroke="currentColor" stroke-width="1.2"/><ellipse cx="12" cy="12" rx="11" ry="4.2" transform="rotate(120 12 12)" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="12" cy="12" r="2"/></svg>
+                <div class="skill-circle-badge badge-cyan"><span>98%</span></div>
+              </div>
+              <h4 class="skill-name-label">React.js</h4>
+            </div>
+
+            <!-- Next.js -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.667 17.583l-5.69-7.873v7.873H9.833V6.417h2.144l5.69 7.873V6.417h2.144v11.166h-2.144z"/></svg>
+                <div class="skill-circle-badge badge-white"><span>95%</span></div>
+              </div>
+              <h4 class="skill-name-label">Next.js</h4>
+            </div>
+
+            <!-- Node.js -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l10 5.77v11.55L12 25.09 2 19.32V7.77zm0 2.31L4 8.92v9.23l8 4.62 8-4.62V8.92z"/></svg>
+                <div class="skill-circle-badge badge-green"><span>95%</span></div>
+              </div>
+              <h4 class="skill-name-label">Node.js</h4>
+            </div>
+
+            <!-- Python -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M11.91 0c-3.15 0-5.71.56-5.71 3.51v2.63h5.71v.88H3.94C1.3 7.02 0 8.58 0 11.73c0 3.32 1.93 4.41 4.41 4.41h1.79v-2.48c0-2.84 2.45-5.33 5.33-5.33h5.33V6.14c0-2.85-2.58-6.14-4.95-6.14zm-3.08 1.83a1.05 1.05 0 1 1 0 2.1 1.05 1.05 0 0 1 0-2.1zm3.26 22.17c3.15 0 5.71-.56 5.71-3.51v-2.63h-5.71v-.88h7.97c2.64 0 3.94-1.56 3.94-4.71 0-3.32-1.93-4.41-4.41-4.41h-1.79v2.48c0 2.84-2.45 5.33-5.33 5.33H7.17v2.19c0 2.85 2.58 6.14 4.95 6.14zm3.08-1.83a1.05 1.05 0 1 1 0-2.1 1.05 1.05 0 0 1 0 2.1z"/></svg>
+                <div class="skill-circle-badge badge-gold"><span>92%</span></div>
+              </div>
+              <h4 class="skill-name-label">Python</h4>
+            </div>
+
+            <!-- PostgreSQL -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                <div class="skill-circle-badge badge-sky"><span>94%</span></div>
+              </div>
+              <h4 class="skill-name-label">PostgreSQL</h4>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Tools & Platforms -->
+        <div class="tools-showcase-column">
+          <div class="showcase-col-header">
+            <span class="showcase-tag">🛠️ Workflow</span>
+            <h3 class="skills-block-title">Tools & Platforms</h3>
+          </div>
+          <div class="skills-visual-grid">
+            <!-- Git / GitHub -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                <div class="skill-circle-badge badge-orange"><span>98%</span></div>
+              </div>
+              <h4 class="skill-name-label">Git / GitHub</h4>
+            </div>
+
+            <!-- Docker -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.186.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.186.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.186.186.186m5.893 2.715h2.118a.186.186 0 00.186-.186V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.929 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.185-.186h-2.119a.186.186 0 00-.186.186v1.888c0 .102.084.185.186.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.185-.186H5.136a.186.186 0 00-.186.186v1.888c0 .102.084.185.186.185m-2.928 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.185-.186H2.208a.186.186 0 00-.186.186v1.888c0 .102.084.185.186.185M23.76 9.89c-.365-2.26-2.138-3.003-2.138-3.003-.846-.43-2.383-.34-3.238.163l-.337.213v3.815h-1.47V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v2.073h-1.284V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v4.789H9.37V6.29a.186.186 0 00-.185-.185H7.066a.185.185 0 00-.185.185v4.789H5.597V6.29a.186.186 0 00-.186-.185H3.292a.185.185 0 00-.185.185v4.789H0c.05 1.58.558 4.298 2.518 6.555 2.012 2.317 4.966 3.013 8.358 3.013 6.947 0 11.753-4.032 12.884-10.743"/></svg>
+                <div class="skill-circle-badge badge-blue"><span>94%</span></div>
+              </div>
+              <h4 class="skill-name-label">Docker</h4>
+            </div>
+
+            <!-- VS Code -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zM18 16.669L9.645 12 18 7.331v9.338z"/></svg>
+                <div class="skill-circle-badge badge-cyan"><span>99%</span></div>
+              </div>
+              <h4 class="skill-name-label">VS Code</h4>
+            </div>
+
+            <!-- Postman -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.83 14.54l-2.48 2.48-1.41-1.41 2.48-2.48-2.48-2.48 1.41-1.41 2.48 2.48c.39.39.39 1.02 0 1.42zM8.17 9.46l2.48-2.48 1.41 1.41-2.48 2.48 2.48 2.48-1.41 1.41-2.48-2.48a.996.996 0 0 1 0-1.42z"/></svg>
+                <div class="skill-circle-badge badge-orange"><span>95%</span></div>
+              </div>
+              <h4 class="skill-name-label">Postman</h4>
+            </div>
+
+            <!-- Linux -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-3.3 0-6 2.7-6 6 0 1.2.4 2.3 1 3.2C4.5 10.4 3 12.9 3 16c0 4.4 3.6 8 8 8s8-3.6 8-8c0-3.1-1.5-5.6-4-6.8.6-.9 1-2 1-3.2 0-3.3-2.7-6-6-6zm0 2c2.2 0 4 1.8 4 4 0 .9-.3 1.7-.8 2.4-.6-.2-1.3-.4-2-.4s-1.4.2-2 .4c-.5-.7-.8-1.5-.8-2.4 0-2.2 1.8-4 4-4zm-1 8.5c.3 0 .7.1 1 .1s.7-.1 1-.1c2.4 1 4 3.2 4 5.5 0 3.3-2.7 6-6 6s-6-2.7-6-6c0-2.3 1.6-4.5 4-5.5z"/></svg>
+                <div class="skill-circle-badge badge-yellow"><span>95%</span></div>
+              </div>
+              <h4 class="skill-name-label">Linux / Bash</h4>
+            </div>
+
+            <!-- AWS / Cloud -->
+            <div class="skill-visual-item">
+              <div class="skill-watermark-wrap">
+                <svg class="skill-watermark-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+                <div class="skill-circle-badge badge-gold"><span>92%</span></div>
+              </div>
+              <h4 class="skill-name-label">AWS / Cloud</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What Can I Do Section (Reference Image Layout) -->
+    <section class="what-can-i-do-section">
+      <div class="what-header">
+        <span class="what-tag">▶ My Services</span>
+        <h2 class="what-title">What Can I Do</h2>
+      </div>
+
+      <div class="what-grid">
+        <!-- Card 1: Frontend Architecture -->
+        <div class="what-card">
+          <div class="what-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>
+          </div>
+          <h3 class="what-card-title">Frontend Architecture</h3>
+          <p class="what-card-desc">Crafting pixel-perfect, highly responsive, and interactive user interfaces using React, Next.js, and modern CSS.</p>
+        </div>
+
+        <!-- Card 2: Backend & API Systems -->
+        <div class="what-card">
+          <div class="what-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          </div>
+          <h3 class="what-card-title">Backend & API Systems</h3>
+          <p class="what-card-desc">Designing scalable server architectures, secure REST & GraphQL APIs, and high-performance microservices.</p>
+        </div>
+
+        <!-- Card 3: Database Engineering -->
+        <div class="what-card">
+          <div class="what-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+          </div>
+          <h3 class="what-card-title">Database Engineering</h3>
+          <p class="what-card-desc">Architecting high-throughput SQL and NoSQL databases, optimized queries, and reliable data modeling.</p>
+        </div>
+
+        <!-- Card 4: Cloud & DevOps -->
+        <div class="what-card">
+          <div class="what-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg>
+          </div>
+          <h3 class="what-card-title">Cloud & DevOps</h3>
+          <p class="what-card-desc">Automating CI/CD pipelines, containerizing applications with Docker, and deploying scalable infrastructure.</p>
+        </div>
+
+        <!-- Card 5: System Performance -->
+        <div class="what-card">
+          <div class="what-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+          </div>
+          <h3 class="what-card-title">System Performance</h3>
+          <p class="what-card-desc">Optimizing web vitals, reducing latency, and ensuring lightning-fast load times across all devices.</p>
+        </div>
+
+        <!-- Card 6: Clean Code & Security -->
+        <div class="what-card">
+          <div class="what-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          </div>
+          <h3 class="what-card-title">Clean Code & Security</h3>
+          <p class="what-card-desc">Writing maintainable, modular, and tested code following strict security protocols and best practices.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Launch & Footer Section (Reference Image Layout) -->
+    <section id="contact" class="launch-footer-section">
+      <div class="launch-grid-container">
+        <!-- Left Area -->
+        <div class="launch-left">
+          <h2 class="launch-main-heading">
+            devel<span class="bolt-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>p,<br>
+            deploy,<br>
+            succeed<span class="dot-accent">.</span>
+          </h2>
+
+          <div class="launch-nav-columns">
+            <div class="nav-col">
+              <span class="col-title">// Navigation</span>
+              <ul class="col-links">
+                <li><a href="#home">Overview</a></li>
+                <li><a href="#about">Who Am I</a></li>
+                <li><a href="#contact">Request a Project</a></li>
+              </ul>
+            </div>
+            <div class="nav-col">
+              <span class="col-title">// Expertise</span>
+              <ul class="col-links">
+                <li><a href="#home">Frontend Architecture</a></li>
+                <li><a href="#home">Backend & API Systems</a></li>
+                <li><a href="#home">Cloud & DevOps</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="launch-cv-action" style="margin-top: 7rem !important; display: flex !important; justify-content: flex-start !important;">
+            <a href="Ahmed_Musthaffa_Resume.pdf" download="Ahmed_Musthaffa_Resume.pdf" target="_blank" class="download-resume-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span>Download Resume / CV</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Right Area -->
+        <div class="launch-right">
+          <div class="contact-form-card">
+            <h3 class="contact-form-title">Contact Me</h3>
+            <p class="contact-form-subtitle">Have a project in mind or want to collaborate? Send your details below.</p>
+            
+            <form class="contact-form" id="contact-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">First Name *</label>
+                  <input type="text" id="contact-first-name" name="firstName" class="form-input" placeholder="John" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Last Name</label>
+                  <input type="text" id="contact-last-name" name="lastName" class="form-input" placeholder="Doe">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Email Address *</label>
+                <input type="email" id="contact-email" name="email" class="form-input" placeholder="john@example.com" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Phone Number</label>
+                <input type="tel" id="contact-phone" name="phone" class="form-input" placeholder="+1 (555) 000-0000">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Project Description *</label>
+                <textarea id="contact-description" name="description" class="form-textarea" rows="3" placeholder="Tell me about your project, goals, or requirements..." required></textarea>
+              </div>
+
+              <button type="submit" id="form-submit-btn" class="form-submit-btn">
+                <span>Submit Request</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </button>
+
+              <div id="form-success-msg" class="form-success-msg" style="display: none;">
+                ✓ Thank you! Your request has been received. I'll get back to you shortly.
+              </div>
+            </form>
+          </div>
+
+          <div class="contact-info-block">
+            <span class="col-title">// Drop me a line</span>
+            <a href="mailto:ahmedmusthaffa02@gmail.com" class="contact-email">ahmedmusthaffa02@gmail.com</a>
+            <div class="social-icon-row">
+              <a href="https://linkedin.com" target="_blank" class="social-icon-btn" title="LinkedIn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+              </a>
+              <a href="https://github.com" target="_blank" class="social-icon-btn" title="GitHub">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="launch-bottom-bar">
+        <div class="bottom-left">
+          <span class="footer-logo-badge">&lt;/&gt;</span>
+          <span class="footer-brand-name">DevPortfolio</span>
+          <span class="footer-sub-badge">+ Full Stack Engineering</span>
+        </div>
+        <div class="bottom-center">
+          Copyright © 2026 Ahmed — All Right Reserved
+        </div>
+        <div class="bottom-right">
+          <span>Created by Ahmed</span>
+          <a href="#home" class="scroll-top-btn" title="Back to top">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js?v=3.4"></script>
+</body>
+</html>
