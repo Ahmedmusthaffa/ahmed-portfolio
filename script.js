@@ -13,6 +13,8 @@
   const scrollHint = document.getElementById('scroll-hint');
   
   const frames = new Array(TOTAL_FRAMES);
+  const bitmaps = new Array(TOTAL_FRAMES);
+  const requestedIndices = new Set();
   let loadedCount = 0;
   
   let targetScrollProgress = 0;
@@ -37,11 +39,14 @@
       }, 400);
     }
     lastDrawnFrameIndex = -1;
-    renderFrame(currentFrameIndex);
+    renderFrame(currentFrameIndex, 0);
   }
   
-  // Find the nearest available loaded frame in memory
+  // Find the nearest available loaded frame in memory (ImageBitmap or HTMLImageElement)
   function getNearestLoadedFrame(targetIndex) {
+    if (bitmaps[targetIndex]) {
+      return { frame: bitmaps[targetIndex], isExact: true };
+    }
     if (frames[targetIndex] && frames[targetIndex].complete && frames[targetIndex].naturalWidth > 0) {
       return { frame: frames[targetIndex], isExact: true };
     }
@@ -49,28 +54,56 @@
     // Search backward first, then forward
     for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
       const prevIdx = targetIndex - offset;
-      if (prevIdx >= 0 && frames[prevIdx] && frames[prevIdx].complete && frames[prevIdx].naturalWidth > 0) {
-        return { frame: frames[prevIdx], isExact: false };
+      if (prevIdx >= 0) {
+        if (bitmaps[prevIdx]) return { frame: bitmaps[prevIdx], isExact: false };
+        if (frames[prevIdx] && frames[prevIdx].complete && frames[prevIdx].naturalWidth > 0) return { frame: frames[prevIdx], isExact: false };
       }
       const nextIdx = targetIndex + offset;
-      if (nextIdx < TOTAL_FRAMES && frames[nextIdx] && frames[nextIdx].complete && frames[nextIdx].naturalWidth > 0) {
-        return { frame: frames[nextIdx], isExact: false };
+      if (nextIdx < TOTAL_FRAMES) {
+        if (bitmaps[nextIdx]) return { frame: bitmaps[nextIdx], isExact: false };
+        if (frames[nextIdx] && frames[nextIdx].complete && frames[nextIdx].naturalWidth > 0) return { frame: frames[nextIdx], isExact: false };
       }
     }
     return { frame: null, isExact: false };
   }
 
-  const requestedIndices = new Set();
-
-  // Load a single frame on demand with GPU decoding
+  // Load a single frame with createImageBitmap GPU Acceleration & HTMLImageElement fallback
   function loadFrame(i, priority = false) {
     if (i < 0 || i >= TOTAL_FRAMES || requestedIndices.has(i)) return;
     requestedIndices.add(i);
 
-    const img = new Image();
-    if (priority) {
-      img.fetchPriority = 'high';
+    const url = getFrameUrl(i);
+
+    // Fast Path: createImageBitmap (Off-thread GPU VRAM texture decoding)
+    if (typeof window.createImageBitmap === 'function' && typeof window.fetch === 'function') {
+      fetch(url, { priority: priority ? 'high' : 'auto' })
+        .then(res => {
+          if (!res.ok) throw new Error('Fetch failed');
+          return res.blob();
+        })
+        .then(blob => createImageBitmap(blob, { imageOrientation: 'none', premultiplyAlpha: 'premultiply' }))
+        .then(bmp => {
+          bitmaps[i] = bmp;
+          loadedCount++;
+          updateProgress();
+          if (Math.abs(i - currentFrameIndex) <= 4) {
+            lastDrawnFrameIndex = -1;
+            renderFrame(currentFrameIndex, 0);
+          }
+        })
+        .catch(() => {
+          // Fallback to standard Image
+          fallbackLoadImage(i, url, priority);
+        });
+      return;
     }
+
+    fallbackLoadImage(i, url, priority);
+  }
+
+  function fallbackLoadImage(i, url, priority) {
+    const img = new Image();
+    if (priority) img.fetchPriority = 'high';
     frames[i] = img;
 
     img.onload = () => {
@@ -79,8 +112,6 @@
       }
       loadedCount++;
       updateProgress();
-
-      // If near current position, render immediately
       if (Math.abs(i - currentFrameIndex) <= 4) {
         lastDrawnFrameIndex = -1;
         renderFrame(currentFrameIndex, 0);
@@ -92,7 +123,7 @@
       updateProgress();
     };
 
-    img.src = getFrameUrl(i);
+    img.src = url;
   }
 
   // Prioritized Two-Phase Streaming:
@@ -113,7 +144,7 @@
     const initialCheckTimer = setInterval(() => {
       let heroReady = true;
       for (let i = 0; i < 8; i++) {
-        if (!frames[i] || !frames[i].complete) {
+        if (!bitmaps[i] && (!frames[i] || !frames[i].complete)) {
           heroReady = false;
           break;
         }
@@ -122,7 +153,7 @@
         clearInterval(initialCheckTimer);
         finishLoading();
       }
-    }, 50);
+    }, 40);
 
     // Safety timeout: 1.5s max
     setTimeout(() => {
@@ -137,12 +168,12 @@
           loadFrame(i, false);
         }
       }
-    }, 600);
+    }, 500);
   }
 
   // Active Sliding Window Streamer around user's scroll position
   function streamNearFrames(centerIdx) {
-    const WINDOW_RADIUS = 18;
+    const WINDOW_RADIUS = 20;
     const start = Math.max(0, centerIdx - WINDOW_RADIUS);
     const end = Math.min(TOTAL_FRAMES - 1, centerIdx + WINDOW_RADIUS);
     for (let i = start; i <= end; i++) {
@@ -180,12 +211,16 @@
   // Draw frame on canvas with sub-frame crossfade blending & 'cover' object-fit scaling
   function renderFrame(index, blendWeight = 0) {
     const { frame: imgA, isExact: isExactA } = getNearestLoadedFrame(index);
-    if (!imgA || !imgA.complete || imgA.naturalWidth === 0) return;
+    if (!imgA) return;
     
     const width = window.innerWidth || document.documentElement.clientWidth;
     const height = window.innerHeight || document.documentElement.clientHeight;
     
-    const imgRatio = imgA.naturalWidth / imgA.naturalHeight;
+    const naturalW = imgA.width || imgA.naturalWidth;
+    const naturalH = imgA.height || imgA.naturalHeight;
+    if (!naturalW || !naturalH) return;
+
+    const imgRatio = naturalW / naturalH;
     const canvasRatio = width / height;
     
     let drawWidth, drawHeight, offsetX, offsetY;
@@ -208,18 +243,18 @@
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(imgA, offsetX, offsetY, drawWidth, drawHeight);
     
-    // Sub-frame cross-fade blend with next adjacent frame if weight > 0.05
-    if (blendWeight > 0.05 && blendWeight < 0.95 && index < TOTAL_FRAMES - 1) {
-      const nextFrame = frames[index + 1];
-      if (nextFrame && nextFrame.complete && nextFrame.naturalWidth > 0) {
+    // Sub-frame cross-fade blend with next adjacent frame if weight > 0.04
+    if (blendWeight > 0.04 && blendWeight < 0.96 && index < TOTAL_FRAMES - 1) {
+      const nextImg = bitmaps[index + 1] || (frames[index + 1] && frames[index + 1].complete && frames[index + 1].naturalWidth > 0 ? frames[index + 1] : null);
+      if (nextImg) {
         ctx.globalAlpha = blendWeight;
-        ctx.drawImage(nextFrame, offsetX, offsetY, drawWidth, drawHeight);
+        ctx.drawImage(nextImg, offsetX, offsetY, drawWidth, drawHeight);
         ctx.globalAlpha = 1.0;
       }
     }
     
     // Only lock lastDrawnFrameIndex if exact target frame was drawn without blend
-    if (isExactA && blendWeight < 0.05) {
+    if (isExactA && blendWeight < 0.04) {
       lastDrawnFrameIndex = index;
     } else {
       lastDrawnFrameIndex = -1;
@@ -247,15 +282,15 @@
     }
   }
   
-  // High-Precision 60-120 FPS Physics Animation Loop
+  // Ultra-High-Precision 60-120 FPS Physics Animation Loop
   function startAnimationLoop() {
     function loop() {
       const diff = targetScrollProgress - currentScrollProgress;
       const absDiff = Math.abs(diff);
 
-      if (absDiff > 0.00005) {
+      if (absDiff > 0.00004) {
         // Continuous velocity curve: ultra-responsive on fast scrolls, velvety smooth deceleration
-        const lerpFactor = absDiff > 0.06 ? 0.22 : 0.11;
+        const lerpFactor = absDiff > 0.05 ? 0.24 : 0.12;
         currentScrollProgress += diff * lerpFactor;
       } else {
         currentScrollProgress = targetScrollProgress;
