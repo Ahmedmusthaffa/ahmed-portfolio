@@ -11,17 +11,22 @@ class Database {
   }
 
   init() {
-    const dbDir = path.dirname(this.dbPath);
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
-    }
-    if (!fs.existsSync(this.dbPath)) {
-      fs.writeFileSync(this.dbPath, JSON.stringify([], null, 2), 'utf8');
-    }
-    if (!fs.existsSync(this.backupDir)) {
-      fs.mkdirSync(this.backupDir, { recursive: true });
+    try {
+      const dbDir = path.dirname(this.dbPath);
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
+      if (!fs.existsSync(this.dbPath)) {
+        fs.writeFileSync(this.dbPath, JSON.stringify([], null, 2), 'utf8');
+      }
+      if (!fs.existsSync(this.backupDir)) {
+        fs.mkdirSync(this.backupDir, { recursive: true });
+      }
+    } catch (err) {
+      console.warn('DB init note: ', err.message);
     }
   }
+
 
   readSubmissions() {
     try {
@@ -29,7 +34,6 @@ class Database {
       const data = fs.readFileSync(this.dbPath, 'utf8');
       return JSON.parse(data || '[]');
     } catch (err) {
-      console.error('Error reading database:', err);
       return [];
     }
   }
@@ -49,13 +53,16 @@ class Database {
     };
 
     submissions.push(newRecord);
-    
-    // Atomic Write
-    const tempPath = this.dbPath + '.tmp_' + Date.now();
-    fs.writeFileSync(tempPath, JSON.stringify(submissions, null, 2), 'utf8');
-    fs.renameSync(tempPath, this.dbPath);
 
-    this.createBackupSnapshot();
+    try {
+      const tempPath = this.dbPath + '.tmp_' + Date.now();
+      fs.writeFileSync(tempPath, JSON.stringify(submissions, null, 2), 'utf8');
+      fs.renameSync(tempPath, this.dbPath);
+      this.createBackupSnapshot();
+    } catch (err) {
+      console.warn('Storage write note: ', err.message);
+    }
+
     return newRecord;
   }
 
@@ -68,17 +75,13 @@ class Database {
 
       const files = fs.readdirSync(this.backupDir)
         .filter(f => f.startsWith('submissions_backup_') && f.endsWith('.json'))
-        .map(f => ({ name: f, time: fs.statSync(path.join(this.backupDir, f)).mtimeMs }))
-        .sort((a, b) => b.time - a.time);
+        .sort();
 
-      if (files.length > 10) {
-        files.slice(10).forEach(file => {
-          try { fs.unlinkSync(path.join(this.backupDir, file.name)); } catch (e) {}
-        });
+      while (files.length > 10) {
+        const oldest = files.shift();
+        fs.unlinkSync(path.join(this.backupDir, oldest));
       }
-    } catch (e) {
-      console.error('Backup error:', e);
-    }
+    } catch (err) {}
   }
 }
 

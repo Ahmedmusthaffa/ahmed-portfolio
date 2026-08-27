@@ -9,26 +9,30 @@ class AnalyticsService {
   }
 
   init() {
-    if (!fs.existsSync(this.analyticsPath)) {
-      const initial = {
-        totalPageViews: 0,
-        resumeDownloads: 0,
-        contactSubmissions: 0,
-        lastUpdated: new Date().toISOString(),
-        dailyStats: {}
-      };
-      fs.writeFileSync(this.analyticsPath, JSON.stringify(initial, null, 2), 'utf8');
-    }
+    try {
+      if (!fs.existsSync(this.analyticsPath)) {
+        const initial = {
+          totalPageViews: 1,
+          resumeDownloads: 0,
+          contactSubmissions: 0,
+          lastUpdated: new Date().toISOString(),
+          dailyStats: {}
+        };
+        fs.writeFileSync(this.analyticsPath, JSON.stringify(initial, null, 2), 'utf8');
+      }
+    } catch (e) {}
   }
+
 
   getData() {
     try {
-      if (!fs.existsSync(this.analyticsPath)) return { totalPageViews: 0, resumeDownloads: 0 };
+      if (!fs.existsSync(this.analyticsPath)) return { totalPageViews: 1, resumeDownloads: 0 };
       return JSON.parse(fs.readFileSync(this.analyticsPath, 'utf8'));
     } catch (e) {
-      return { totalPageViews: 0, resumeDownloads: 0 };
+      return { totalPageViews: 1, resumeDownloads: 0 };
     }
   }
+
 
   track(eventType = 'pageview') {
     const data = this.getData();
@@ -51,9 +55,14 @@ class AnalyticsService {
     }
 
     data.lastUpdated = new Date().toISOString();
-    fs.writeFileSync(this.analyticsPath, JSON.stringify(data, null, 2), 'utf8');
+
+    try {
+      fs.writeFileSync(this.analyticsPath, JSON.stringify(data, null, 2), 'utf8');
+    } catch (e) {}
+
     return data;
   }
 }
+
 
 module.exports = new AnalyticsService();

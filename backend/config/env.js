@@ -6,6 +6,9 @@ if (fs.existsSync(envPath) && typeof process.loadEnvFile === 'function') {
   try { process.loadEnvFile(envPath); } catch (err) {}
 }
 
+const isVercel = !!process.env.VERCEL;
+const storageBase = isVercel ? '/tmp' : path.resolve(__dirname, '../../');
+
 const config = {
   port: parseInt(process.env.PORT || '8080', 10),
   host: process.env.HOST || '0.0.0.0',
@@ -19,9 +22,9 @@ const config = {
   resendApiKey: process.env.RESEND_API_KEY || '',
   rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '10', 10),
   rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-  dbPath: path.resolve(__dirname, '../../contact_submissions.json'),
-  backupDir: path.resolve(__dirname, '../../backups'),
-  analyticsPath: path.resolve(__dirname, '../../analytics_data.json'),
+  dbPath: path.resolve(storageBase, 'contact_submissions.json'),
+  backupDir: path.resolve(storageBase, 'backups'),
+  analyticsPath: path.resolve(storageBase, 'analytics_data.json'),
   publicDir: path.resolve(__dirname, '../../')
 };
 

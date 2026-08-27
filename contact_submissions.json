@@ -204,5 +204,27 @@
     "phone": "+1 (555) 789-0123",
     "description": "Hi Ahmed! I reviewed your Full Stack Developer portfolio and loved the clean UI and robust architecture. We would love to discuss an enterprise web application project with you. Please check your email to connect!",
     "clientIp": "127.0.0.1"
+  },
+  {
+    "id": "3259ff45-f7d3-4049-8641-62712c7d79e9",
+    "timestamp": "2026-08-27T06:42:48.903Z",
+    "status": "New",
+    "firstName": "Test",
+    "lastName": "Developer",
+    "email": "test@ahmeddev.com",
+    "phone": "+11223344",
+    "description": "Building app features",
+    "clientIp": "127.0.0.1"
+  },
+  {
+    "id": "5a9a557b-6fd2-4245-93ae-75a9d96ffe6f",
+    "timestamp": "2026-08-27T06:42:49.105Z",
+    "status": "New",
+    "firstName": "Alice",
+    "lastName": "Smith",
+    "email": "alice@example.com",
+    "phone": "+1555000",
+    "description": "Need a Full Stack Platform",
+    "clientIp": "::1"
   }
 ]
