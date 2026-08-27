@@ -1,7 +1,7 @@
 (function() {
-  const FIRST_FRAME_INDEX = 0;
+  const FIRST_FRAME_INDEX = 24; // Trim initial 1 second (24 frames) to eliminate left-side shadow
   const LAST_FRAME_INDEX = 191;
-  const TOTAL_FRAMES = 192; // 192 pristine 1080p Studio HD frames (000 to 191)
+  const TOTAL_FRAMES = (LAST_FRAME_INDEX - FIRST_FRAME_INDEX + 1); // 168 clean Studio HD frames (024 to 191)
   const FRAME_DIR = 'background video-hd';
   
   const canvas = document.getElementById('frame-canvas');
@@ -23,9 +23,9 @@
   let lastDrawnFrameIndex = -1;
   let isLoaded = false;
   
-  // Format frame filename with URL encoding starting from frame-000.webp to frame-191.webp
+  // Format frame filename with URL encoding starting from frame-024.webp to frame-191.webp
   function getFrameUrl(index) {
-    const frameNum = String(index).padStart(3, '0');
+    const frameNum = String(index + FIRST_FRAME_INDEX).padStart(3, '0');
     return encodeURI(`${FRAME_DIR}/frame-${frameNum}.webp`);
   }
 
