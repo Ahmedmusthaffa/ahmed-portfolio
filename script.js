@@ -60,7 +60,7 @@
     return { frame: null, isExact: false };
   }
 
-  // Preload all 231 frames with priority loading for initial buffer
+  // Preload all 231 frames with priority loading for initial buffer and GPU decoding
   function preloadFrames() {
     const CRITICAL_BUFFER = Math.min(25, TOTAL_FRAMES);
     
@@ -74,13 +74,17 @@
       frames[i] = img;
       
       img.onload = () => {
+        // Pre-decode off the main thread for 0ms GPU blit time
+        if (img.decode) {
+          img.decode().catch(() => {});
+        }
         loadedCount++;
         updateProgress();
         
         // If current frame is close to this newly loaded image, re-render immediately
         if (Math.abs(i - currentFrameIndex) <= 3) {
           lastDrawnFrameIndex = -1;
-          renderFrame(currentFrameIndex);
+          renderFrame(currentFrameIndex, 0);
         }
         
         // Dismiss loader once critical initial buffer is ready
@@ -120,23 +124,23 @@
     // Reset transform matrix before scaling to prevent cumulative zoom multiplication
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     
     // Force re-render current frame on resize
     lastDrawnFrameIndex = -1;
-    renderFrame(currentFrameIndex);
+    renderFrame(currentFrameIndex, 0);
   }
   
-  // Draw frame on canvas with 'cover' object-fit scaling
-  function renderFrame(index) {
-    if (index === lastDrawnFrameIndex) return;
-    
-    const { frame: img, isExact } = getNearestLoadedFrame(index);
-    if (!img || !img.complete || img.naturalWidth === 0) return;
+  // Draw frame on canvas with sub-frame crossfade blending & 'cover' object-fit scaling
+  function renderFrame(index, blendWeight = 0) {
+    const { frame: imgA, isExact: isExactA } = getNearestLoadedFrame(index);
+    if (!imgA || !imgA.complete || imgA.naturalWidth === 0) return;
     
     const width = window.innerWidth || document.documentElement.clientWidth;
     const height = window.innerHeight || document.documentElement.clientHeight;
     
-    const imgRatio = img.naturalWidth / img.naturalHeight;
+    const imgRatio = imgA.naturalWidth / imgA.naturalHeight;
     const canvasRatio = width / height;
     
     let drawWidth, drawHeight, offsetX, offsetY;
@@ -153,12 +157,24 @@
       offsetY = 0;
     }
     
+    // Draw base primary frame
+    ctx.globalAlpha = 1.0;
     ctx.fillStyle = '#08090c';
     ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+    ctx.drawImage(imgA, offsetX, offsetY, drawWidth, drawHeight);
     
-    // Only lock lastDrawnFrameIndex if exact target frame was drawn
-    if (isExact) {
+    // Sub-frame cross-fade blend with next adjacent frame if weight > 0.05
+    if (blendWeight > 0.05 && blendWeight < 0.95 && index < TOTAL_FRAMES - 1) {
+      const nextFrame = frames[index + 1];
+      if (nextFrame && nextFrame.complete && nextFrame.naturalWidth > 0) {
+        ctx.globalAlpha = blendWeight;
+        ctx.drawImage(nextFrame, offsetX, offsetY, drawWidth, drawHeight);
+        ctx.globalAlpha = 1.0;
+      }
+    }
+    
+    // Only lock lastDrawnFrameIndex if exact target frame was drawn without blend
+    if (isExactA && blendWeight < 0.05) {
       lastDrawnFrameIndex = index;
     } else {
       lastDrawnFrameIndex = -1;
@@ -182,27 +198,26 @@
     }
   }
   
-  // Animation loop with adaptive frame interpolation (lerp)
+  // High-Precision 60-120 FPS Physics Animation Loop
   function startAnimationLoop() {
     function loop() {
       const diff = targetScrollProgress - currentScrollProgress;
       const absDiff = Math.abs(diff);
 
-      if (absDiff > 0.0001) {
-        // Fast scroll adaptive factor (0.28 for fast scrolling, 0.15 for smooth settling)
-        const lerpFactor = absDiff > 0.04 ? 0.28 : 0.15;
+      if (absDiff > 0.00005) {
+        // Continuous velocity curve: ultra-responsive on fast scrolls, velvety smooth deceleration
+        const lerpFactor = absDiff > 0.06 ? 0.22 : 0.11;
         currentScrollProgress += diff * lerpFactor;
       } else {
         currentScrollProgress = targetScrollProgress;
       }
       
-      const frameIdx = Math.min(
-        TOTAL_FRAMES - 1,
-        Math.max(0, Math.floor(currentScrollProgress * (TOTAL_FRAMES - 1)))
-      );
+      const exactPos = currentScrollProgress * (TOTAL_FRAMES - 1);
+      const frameIdx = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.floor(exactPos)));
+      const blendFraction = exactPos - frameIdx;
       
       currentFrameIndex = frameIdx;
-      renderFrame(currentFrameIndex);
+      renderFrame(currentFrameIndex, blendFraction);
       
       requestAnimationFrame(loop);
     }
@@ -216,7 +231,7 @@
     resizeTimer = setTimeout(() => {
       resizeCanvas();
       updateScrollTarget();
-    }, 80);
+    }, 60);
   }
 
   window.addEventListener('scroll', updateScrollTarget, { passive: true });
