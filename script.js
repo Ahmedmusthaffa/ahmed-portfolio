@@ -189,9 +189,9 @@
     if (loaderPercent) loaderPercent.innerText = `${percent}%`;
   }
   
-  // Resize canvas to fit window dimensions maintaining DPR scaling & reset transform matrix
+  // Resize canvas to fit window dimensions maintaining 3x DPR scaling & reset transform matrix
   function resizeCanvas() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const winW = window.innerWidth || document.documentElement.clientWidth;
     const winH = window.innerHeight || document.documentElement.clientHeight;
     canvas.width = Math.floor(winW * dpr);
