@@ -1,13 +1,9 @@
 {
   "version": 2,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/server.js"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.**",
-      "dest"#�"���FW��F�� �ТЧ�
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    }
+  ]
+}
