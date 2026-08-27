@@ -88,7 +88,7 @@
           updateProgress();
           if (Math.abs(i - currentFrameIndex) <= 4) {
             lastDrawnFrameIndex = -1;
-            renderFrame(currentFrameIndex, 0);
+            renderFrame(currentFrameIndex);
           }
         })
         .catch(() => {
@@ -114,7 +114,7 @@
       updateProgress();
       if (Math.abs(i - currentFrameIndex) <= 4) {
         lastDrawnFrameIndex = -1;
-        renderFrame(currentFrameIndex, 0);
+        renderFrame(currentFrameIndex);
       }
     };
 
@@ -205,19 +205,21 @@
     
     // Force re-render current frame on resize
     lastDrawnFrameIndex = -1;
-    renderFrame(currentFrameIndex, 0);
+    renderFrame(currentFrameIndex);
   }
   
-  // Draw frame on canvas with sub-frame crossfade blending & 'cover' object-fit scaling
-  function renderFrame(index, blendWeight = 0) {
-    const { frame: imgA, isExact: isExactA } = getNearestLoadedFrame(index);
-    if (!imgA) return;
+  // Draw single rock-solid frame on canvas with 'cover' object-fit scaling
+  function renderFrame(index) {
+    if (index === lastDrawnFrameIndex) return;
+
+    const { frame: img, isExact } = getNearestLoadedFrame(index);
+    if (!img) return;
     
     const width = window.innerWidth || document.documentElement.clientWidth;
     const height = window.innerHeight || document.documentElement.clientHeight;
     
-    const naturalW = imgA.width || imgA.naturalWidth;
-    const naturalH = imgA.height || imgA.naturalHeight;
+    const naturalW = img.width || img.naturalWidth;
+    const naturalH = img.height || img.naturalHeight;
     if (!naturalW || !naturalH) return;
 
     const imgRatio = naturalW / naturalH;
@@ -226,38 +228,21 @@
     let drawWidth, drawHeight, offsetX, offsetY;
     
     if (canvasRatio > imgRatio) {
-      drawWidth = width;
-      drawHeight = width / imgRatio;
+      drawWidth = Math.round(width);
+      drawHeight = Math.round(width / imgRatio);
       offsetX = 0;
-      offsetY = (height - drawHeight) / 2;
+      offsetY = Math.round((height - drawHeight) / 2);
     } else {
-      drawWidth = height * imgRatio;
-      drawHeight = height;
-      offsetX = (width - drawWidth) / 2;
+      drawWidth = Math.round(height * imgRatio);
+      drawHeight = Math.round(height);
+      offsetX = Math.round((width - drawWidth) / 2);
       offsetY = 0;
     }
     
-    // Draw base primary frame
-    ctx.globalAlpha = 1.0;
-    ctx.fillStyle = '#08090c';
-    ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(imgA, offsetX, offsetY, drawWidth, drawHeight);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     
-    // Sub-frame cross-fade blend with next adjacent frame if weight > 0.04
-    if (blendWeight > 0.04 && blendWeight < 0.96 && index < TOTAL_FRAMES - 1) {
-      const nextImg = bitmaps[index + 1] || (frames[index + 1] && frames[index + 1].complete && frames[index + 1].naturalWidth > 0 ? frames[index + 1] : null);
-      if (nextImg) {
-        ctx.globalAlpha = blendWeight;
-        ctx.drawImage(nextImg, offsetX, offsetY, drawWidth, drawHeight);
-        ctx.globalAlpha = 1.0;
-      }
-    }
-    
-    // Only lock lastDrawnFrameIndex if exact target frame was drawn without blend
-    if (isExactA && blendWeight < 0.04) {
+    if (isExact) {
       lastDrawnFrameIndex = index;
-    } else {
-      lastDrawnFrameIndex = -1;
     }
   }
   
@@ -269,7 +254,7 @@
     targetScrollProgress = Math.min(1, Math.max(0, scrollY / maxScroll));
     
     // Proactively stream frames around the targeted scroll point
-    const estimatedFrame = Math.floor(targetScrollProgress * (TOTAL_FRAMES - 1));
+    const estimatedFrame = Math.round(targetScrollProgress * (TOTAL_FRAMES - 1));
     streamNearFrames(estimatedFrame);
     
     // Fade out scroll hint when user starts scrolling
@@ -282,26 +267,27 @@
     }
   }
   
-  // Ultra-High-Precision 60-120 FPS Physics Animation Loop
+  // Rock-Solid Silky Smooth 60-120 FPS Animation Loop
   function startAnimationLoop() {
     function loop() {
       const diff = targetScrollProgress - currentScrollProgress;
       const absDiff = Math.abs(diff);
 
-      if (absDiff > 0.00004) {
-        // Continuous velocity curve: ultra-responsive on fast scrolls, velvety smooth deceleration
-        const lerpFactor = absDiff > 0.05 ? 0.24 : 0.12;
+      if (absDiff > 0.0001) {
+        // Smooth exponential damping (responsive & zero oscillation)
+        const lerpFactor = absDiff > 0.05 ? 0.22 : 0.14;
         currentScrollProgress += diff * lerpFactor;
       } else {
         currentScrollProgress = targetScrollProgress;
       }
       
-      const exactPos = currentScrollProgress * (TOTAL_FRAMES - 1);
-      const frameIdx = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.floor(exactPos)));
-      const blendFraction = exactPos - frameIdx;
+      const frameIdx = Math.min(
+        TOTAL_FRAMES - 1,
+        Math.max(0, Math.round(currentScrollProgress * (TOTAL_FRAMES - 1)))
+      );
       
       currentFrameIndex = frameIdx;
-      renderFrame(currentFrameIndex, blendFraction);
+      renderFrame(currentFrameIndex);
       
       requestAnimationFrame(loop);
     }
