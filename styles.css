@@ -701,7 +701,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 1rem;
-  padding-left: 4.5rem; /* Shift right 1 to 2 inches to center between left edge and yellow line */
+  padding-left: 2.2rem; /* Adjusted slightly left for optimal visual balance */
   text-align: center;
 }
 
