@@ -1,8 +1,8 @@
 (function() {
-  const FIRST_FRAME_INDEX = 10;
-  const LAST_FRAME_INDEX = 240;
-  const TOTAL_FRAMES = (LAST_FRAME_INDEX - FIRST_FRAME_INDEX + 1); // 231 frames (010 to 240)
-  const FRAME_DIR = 'background video';
+  const FIRST_FRAME_INDEX = 0;
+  const LAST_FRAME_INDEX = 191;
+  const TOTAL_FRAMES = 192; // 192 pristine 1080p Studio HD frames (000 to 191)
+  const FRAME_DIR = 'background video-hd';
   
   const canvas = document.getElementById('frame-canvas');
   const ctx = canvas.getContext('2d', { alpha: false });
@@ -23,10 +23,10 @@
   let lastDrawnFrameIndex = -1;
   let isLoaded = false;
   
-  // Format frame filename with URL encoding starting from ezgif-frame-010.jpg to ezgif-frame-240.jpg
+  // Format frame filename with URL encoding starting from frame-000.webp to frame-191.webp
   function getFrameUrl(index) {
-    const frameNum = String(index + FIRST_FRAME_INDEX).padStart(3, '0');
-    return encodeURI(`${FRAME_DIR}/ezgif-frame-${frameNum}.jpg`);
+    const frameNum = String(index).padStart(3, '0');
+    return encodeURI(`${FRAME_DIR}/frame-${frameNum}.webp`);
   }
 
   function finishLoading() {
