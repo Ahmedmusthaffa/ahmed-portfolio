@@ -699,8 +699,10 @@ body {
 .who-left-col {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1rem;
-  text-align: left;
+  padding-left: 4.5rem; /* Shift right 1 to 2 inches to center between left edge and yellow line */
+  text-align: center;
 }
 
 .who-tag {
@@ -710,6 +712,7 @@ body {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-shadow: 0 0 12px rgba(204, 255, 0, 0.4);
+  text-align: center;
 }
 
 .who-identity-block {
@@ -725,7 +728,7 @@ body {
   letter-spacing: 0.02em;
   color: #ffffff;
   margin: 0;
-  text-align: left;
+  text-align: center;
   white-space: nowrap;
   text-shadow: 0 0 24px rgba(255, 255, 255, 0.45), 0 0 50px rgba(204, 255, 0, 0.2), 0 4px 16px rgba(0, 0, 0, 0.9);
 }
@@ -1406,6 +1409,11 @@ body {
   .who-am-i-layout {
     grid-template-columns: 1fr;
     gap: 2.5rem;
+  }
+  .who-left-col {
+    padding-left: 0 !important;
+    align-items: flex-start !important;
+    text-align: left !important;
   }
   .skills-tools-split-container {
     grid-template-columns: 1fr;
