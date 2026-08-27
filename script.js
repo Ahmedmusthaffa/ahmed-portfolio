@@ -60,50 +60,95 @@
     return { frame: null, isExact: false };
   }
 
-  // Preload all 231 frames with priority loading for initial buffer and GPU decoding
-  function preloadFrames() {
-    const CRITICAL_BUFFER = Math.min(25, TOTAL_FRAMES);
-    
-    // Safety timeout: Never keep the user waiting longer than 1.8s
-    const safetyTimer = setTimeout(() => {
-      finishLoading();
-    }, 1800);
+  const requestedIndices = new Set();
 
-    for (let i = 0; i < TOTAL_FRAMES; i++) {
-      const img = new Image();
-      frames[i] = img;
-      
-      img.onload = () => {
-        // Pre-decode off the main thread for 0ms GPU blit time
-        if (img.decode) {
-          img.decode().catch(() => {});
+  // Load a single frame on demand with GPU decoding
+  function loadFrame(i, priority = false) {
+    if (i < 0 || i >= TOTAL_FRAMES || requestedIndices.has(i)) return;
+    requestedIndices.add(i);
+
+    const img = new Image();
+    if (priority) {
+      img.fetchPriority = 'high';
+    }
+    frames[i] = img;
+
+    img.onload = () => {
+      if (img.decode) {
+        img.decode().catch(() => {});
+      }
+      loadedCount++;
+      updateProgress();
+
+      // If near current position, render immediately
+      if (Math.abs(i - currentFrameIndex) <= 4) {
+        lastDrawnFrameIndex = -1;
+        renderFrame(currentFrameIndex, 0);
+      }
+    };
+
+    img.onerror = () => {
+      loadedCount++;
+      updateProgress();
+    };
+
+    img.src = getFrameUrl(i);
+  }
+
+  // Prioritized Two-Phase Streaming:
+  // Phase 1: Keyframe skeleton across the whole video (every 4th frame) for instant 100% coverage
+  // Phase 2: Active sliding window around the user's scroll position
+  function preloadFrames() {
+    // 1. Load the first 15 consecutive frames immediately for hero section
+    for (let i = 0; i < Math.min(15, TOTAL_FRAMES); i++) {
+      loadFrame(i, true);
+    }
+
+    // 2. Load keyframes every 4th frame across the entire timeline (0, 4, 8, 12... 230)
+    for (let i = 16; i < TOTAL_FRAMES; i += 4) {
+      loadFrame(i, false);
+    }
+
+    // Dismiss loader quickly once the hero frames are ready
+    const initialCheckTimer = setInterval(() => {
+      let heroReady = true;
+      for (let i = 0; i < 8; i++) {
+        if (!frames[i] || !frames[i].complete) {
+          heroReady = false;
+          break;
         }
-        loadedCount++;
-        updateProgress();
-        
-        // If current frame is close to this newly loaded image, re-render immediately
-        if (Math.abs(i - currentFrameIndex) <= 3) {
-          lastDrawnFrameIndex = -1;
-          renderFrame(currentFrameIndex, 0);
+      }
+      if (heroReady || loadedCount >= 20) {
+        clearInterval(initialCheckTimer);
+        finishLoading();
+      }
+    }, 50);
+
+    // Safety timeout: 1.5s max
+    setTimeout(() => {
+      clearInterval(initialCheckTimer);
+      finishLoading();
+    }, 1500);
+
+    // 3. Eagerly fill in remaining frames in background
+    setTimeout(() => {
+      for (let i = 0; i < TOTAL_FRAMES; i++) {
+        if (!requestedIndices.has(i)) {
+          loadFrame(i, false);
         }
-        
-        // Dismiss loader once critical initial buffer is ready
-        if (loadedCount >= CRITICAL_BUFFER && !isLoaded) {
-          clearTimeout(safetyTimer);
-          finishLoading();
-        }
-      };
-      
-      img.onerror = () => {
-        loadedCount++;
-        updateProgress();
-        if (loadedCount >= CRITICAL_BUFFER && !isLoaded) {
-          clearTimeout(safetyTimer);
-          finishLoading();
-        }
-      };
-      
-      img.src = getFrameUrl(i);
+      }
+    }, 600);
+  }
+
+  // Active Sliding Window Streamer around user's scroll position
+  function streamNearFrames(centerIdx) {
+    const WINDOW_RADIUS = 18;
+    const start = Math.max(0, centerIdx - WINDOW_RADIUS);
+    const end = Math.min(TOTAL_FRAMES - 1, centerIdx + WINDOW_RADIUS);
+    for (let i = start; i <= end; i++) {
+      if (!requestedIndices.has(i)) {
+        loadFrame(i, true);
+      }
     }
   }
 
@@ -187,6 +232,10 @@
     const winH = window.innerHeight || document.documentElement.clientHeight;
     const maxScroll = Math.max(1, (document.documentElement.scrollHeight || document.body.scrollHeight) - winH);
     targetScrollProgress = Math.min(1, Math.max(0, scrollY / maxScroll));
+    
+    // Proactively stream frames around the targeted scroll point
+    const estimatedFrame = Math.floor(targetScrollProgress * (TOTAL_FRAMES - 1));
+    streamNearFrames(estimatedFrame);
     
     // Fade out scroll hint when user starts scrolling
     if (scrollHint) {
