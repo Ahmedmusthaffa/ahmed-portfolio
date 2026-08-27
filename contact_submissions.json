@@ -248,5 +248,27 @@
     "phone": "+1555000",
     "description": "Need a Full Stack Platform",
     "clientIp": "::1"
+  },
+  {
+    "id": "cccd1af1-524b-4ec6-a461-c8b4bec65c95",
+    "timestamp": "2026-08-27T09:13:36.240Z",
+    "status": "New",
+    "firstName": "Test",
+    "lastName": "Developer",
+    "email": "test@ahmeddev.com",
+    "phone": "+11223344",
+    "description": "Building app features",
+    "clientIp": "127.0.0.1"
+  },
+  {
+    "id": "66d4371f-2a66-47b4-a752-12347cdb1ccc",
+    "timestamp": "2026-08-27T09:13:36.431Z",
+    "status": "New",
+    "firstName": "Alice",
+    "lastName": "Smith",
+    "email": "alice@example.com",
+    "phone": "+1555000",
+    "description": "Need a Full Stack Platform",
+    "clientIp": "::1"
   }
 ]

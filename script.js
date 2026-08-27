@@ -34,14 +34,41 @@
       loader.classList.add('hidden');
       setTimeout(() => {
         loader.style.display = 'none';
-      }, 500);
+      }, 400);
     }
     lastDrawnFrameIndex = -1;
-    renderFrame(0);
+    renderFrame(currentFrameIndex);
   }
   
-  // Preload all 231 valid frames into memory
+  // Find the nearest available loaded frame in memory
+  function getNearestLoadedFrame(targetIndex) {
+    if (frames[targetIndex] && frames[targetIndex].complete && frames[targetIndex].naturalWidth > 0) {
+      return { frame: frames[targetIndex], isExact: true };
+    }
+    
+    // Search backward first, then forward
+    for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
+      const prevIdx = targetIndex - offset;
+      if (prevIdx >= 0 && frames[prevIdx] && frames[prevIdx].complete && frames[prevIdx].naturalWidth > 0) {
+        return { frame: frames[prevIdx], isExact: false };
+      }
+      const nextIdx = targetIndex + offset;
+      if (nextIdx < TOTAL_FRAMES && frames[nextIdx] && frames[nextIdx].complete && frames[nextIdx].naturalWidth > 0) {
+        return { frame: frames[nextIdx], isExact: false };
+      }
+    }
+    return { frame: null, isExact: false };
+  }
+
+  // Preload all 231 frames with priority loading for initial buffer
   function preloadFrames() {
+    const CRITICAL_BUFFER = Math.min(25, TOTAL_FRAMES);
+    
+    // Safety timeout: Never keep the user waiting longer than 1.8s
+    const safetyTimer = setTimeout(() => {
+      finishLoading();
+    }, 1800);
+
     for (let i = 0; i < TOTAL_FRAMES; i++) {
       const img = new Image();
       frames[i] = img;
@@ -50,10 +77,15 @@
         loadedCount++;
         updateProgress();
         
-        // Render frame 0 immediately when loaded
-        if (i === 0) {
+        // If current frame is close to this newly loaded image, re-render immediately
+        if (Math.abs(i - currentFrameIndex) <= 3) {
           lastDrawnFrameIndex = -1;
-          renderFrame(0);
+          renderFrame(currentFrameIndex);
+        }
+        
+        // Dismiss loader once critical initial buffer is ready
+        if (loadedCount >= CRITICAL_BUFFER && !isLoaded) {
+          clearTimeout(safetyTimer);
           finishLoading();
         }
       };
@@ -61,6 +93,10 @@
       img.onerror = () => {
         loadedCount++;
         updateProgress();
+        if (loadedCount >= CRITICAL_BUFFER && !isLoaded) {
+          clearTimeout(safetyTimer);
+          finishLoading();
+        }
       };
       
       img.src = getFrameUrl(i);
@@ -94,11 +130,7 @@
   function renderFrame(index) {
     if (index === lastDrawnFrameIndex) return;
     
-    let img = frames[index];
-    // Fallback to first available loaded frame if target frame isn't ready yet
-    if (!img || !img.complete || img.naturalWidth === 0) {
-      img = frames[0];
-    }
+    const { frame: img, isExact } = getNearestLoadedFrame(index);
     if (!img || !img.complete || img.naturalWidth === 0) return;
     
     const width = window.innerWidth || document.documentElement.clientWidth;
@@ -125,7 +157,12 @@
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     
-    lastDrawnFrameIndex = index;
+    // Only lock lastDrawnFrameIndex if exact target frame was drawn
+    if (isExact) {
+      lastDrawnFrameIndex = index;
+    } else {
+      lastDrawnFrameIndex = -1;
+    }
   }
   
   // Calculate target scroll progress [0, 1]
@@ -145,13 +182,16 @@
     }
   }
   
-  // Animation loop with frame interpolation (lerp)
+  // Animation loop with adaptive frame interpolation (lerp)
   function startAnimationLoop() {
     function loop() {
-      // Lerp for ultra smooth fluid animation (factor 0.1)
       const diff = targetScrollProgress - currentScrollProgress;
-      if (Math.abs(diff) > 0.0001) {
-        currentScrollProgress += diff * 0.1;
+      const absDiff = Math.abs(diff);
+
+      if (absDiff > 0.0001) {
+        // Fast scroll adaptive factor (0.28 for fast scrolling, 0.15 for smooth settling)
+        const lerpFactor = absDiff > 0.04 ? 0.28 : 0.15;
+        currentScrollProgress += diff * lerpFactor;
       } else {
         currentScrollProgress = targetScrollProgress;
       }
