@@ -88,12 +88,14 @@ body {
 /* Fixed Canvas Container for Video Frame Scroll Engine */
 #canvas-container {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100vw;
+  width: 100dvw;
   height: 100vh;
+  height: 100dvh;
   z-index: 1;
   pointer-events: none;
+  overflow: hidden;
 }
 
 #frame-canvas {
@@ -1409,6 +1411,7 @@ body {
   .services-row {
     grid-template-columns: repeat(2, 1fr);
     gap: 2rem;
+    margin-top: 6rem;
   }
   .what-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1423,39 +1426,119 @@ body {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .content-wrapper {
-    padding: 1rem 1rem 3rem 1rem;
+    padding: 1rem 1.25rem 4rem 1.25rem !important;
+    width: 100% !important;
   }
-  .who-story-card {
-    padding-left: 1rem;
+  .navbar {
+    margin-bottom: 2rem !important;
+    padding: 0.75rem 0 !important;
   }
-  .skills-visual-grid {
-    gap: 1.6rem;
+  .nav-brand {
+    font-size: 1.35rem !important;
+  }
+  .hero-title-area {
+    padding-top: 1.5rem !important;
+    padding-left: 0 !important;
+    width: 100% !important;
+  }
+  .hero-subtitle {
+    font-size: 1.05rem !important;
+    margin-bottom: 0.4rem !important;
+  }
+  .hero-main-heading {
+    font-size: clamp(2.8rem, 11.5vw, 4.2rem) !important;
+    line-height: 1.04 !important;
   }
   .services-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 1.8rem !important;
+    margin-top: 3.5rem !important;
+    padding-top: 1.5rem !important;
   }
-  .what-grid {
-    grid-template-columns: 1fr;
+  .service-item {
+    gap: 0.45rem !important;
   }
-  .work-together-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 2rem 1.5rem;
+  .who-identity-block {
+    width: 100% !important;
+    align-items: center !important;
+    text-align: center !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .who-story-card {
+    padding-left: 0 !important;
+  }
+  .skills-tools-split-container {
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+  }
+  .skills-visual-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.2rem !important;
+  }
+  .project-feature-card {
+    padding: 1.5rem !important;
+  }
+  .project-card-image-wrap {
+    height: 200px !important;
+  }
+  .project-tech-tags {
+    flex-wrap: wrap !important;
+    gap: 0.4rem !important;
+  }
+  .launch-grid-container {
+    grid-template-columns: 1fr !important;
+    gap: 2.5rem !important;
+  }
+  .launch-cv-action {
+    margin-top: 2.5rem !important;
+  }
+  .contact-form-glass-card {
+    padding: 1.5rem !important;
   }
   .form-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    gap: 0.8rem !important;
+  }
+  .contact-input, .contact-textarea {
+    font-size: 16px !important; /* Prevents auto-zoom on iOS */
+    padding: 0.9rem 1rem !important;
+  }
+  .submit-proposal-btn, .download-resume-btn, .hero-contact-btn {
+    width: 100% !important;
+    justify-content: center !important;
+    text-align: center !important;
+    min-height: 48px !important;
+  }
+  .launch-bottom-bar {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 1.2rem !important;
+  }
+  .bottom-left, .bottom-right {
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-wrapper {
+    padding: 0.85rem 1rem 3.5rem 1rem !important;
+  }
+  .hero-main-heading {
+    font-size: clamp(2.4rem, 13vw, 3.4rem) !important;
+  }
+  .who-name-heading {
+    font-size: clamp(2rem, 10vw, 3rem) !important;
+  }
+  .skills-category-title, .tools-category-title {
+    font-size: 1.15rem !important;
+  }
+  .contact-form-glass-card {
+    padding: 1.2rem !important;
   }
   .launch-nav-columns {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-  .brands-container {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .brands-logos {
-    gap: 1.5rem;
+    grid-template-columns: 1fr !important;
+    gap: 1.8rem !important;
   }
 }

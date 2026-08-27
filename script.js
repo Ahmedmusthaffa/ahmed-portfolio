@@ -76,8 +76,10 @@
   // Resize canvas to fit window dimensions maintaining DPR scaling & reset transform matrix
   function resizeCanvas() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.floor(window.innerWidth * dpr);
-    canvas.height = Math.floor(window.innerHeight * dpr);
+    const winW = window.innerWidth || document.documentElement.clientWidth;
+    const winH = window.innerHeight || document.documentElement.clientHeight;
+    canvas.width = Math.floor(winW * dpr);
+    canvas.height = Math.floor(winH * dpr);
     
     // Reset transform matrix before scaling to prevent cumulative zoom multiplication
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -99,8 +101,8 @@
     }
     if (!img || !img.complete || img.naturalWidth === 0) return;
     
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const width = window.innerWidth || document.documentElement.clientWidth;
+    const height = window.innerHeight || document.documentElement.clientHeight;
     
     const imgRatio = img.naturalWidth / img.naturalHeight;
     const canvasRatio = width / height;
@@ -129,7 +131,8 @@
   // Calculate target scroll progress [0, 1]
   function updateScrollTarget() {
     const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    const maxScroll = Math.max(1, (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight);
+    const winH = window.innerHeight || document.documentElement.clientHeight;
+    const maxScroll = Math.max(1, (document.documentElement.scrollHeight || document.body.scrollHeight) - winH);
     targetScrollProgress = Math.min(1, Math.max(0, scrollY / maxScroll));
     
     // Fade out scroll hint when user starts scrolling
@@ -166,9 +169,21 @@
     requestAnimationFrame(loop);
   }
   
-  // Event Listeners
+  // Mobile-Optimized Event Listeners
+  let resizeTimer = null;
+  function onWindowResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      resizeCanvas();
+      updateScrollTarget();
+    }, 80);
+  }
+
   window.addEventListener('scroll', updateScrollTarget, { passive: true });
-  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('resize', onWindowResize);
+  window.addEventListener('orientationchange', onWindowResize);
+  window.addEventListener('touchstart', updateScrollTarget, { passive: true });
+  window.addEventListener('touchmove', updateScrollTarget, { passive: true });
   window.addEventListener('DOMContentLoaded', () => {
     updateScrollTarget();
     resizeCanvas();
