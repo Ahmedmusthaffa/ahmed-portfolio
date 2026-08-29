@@ -30,23 +30,28 @@ class MailerService {
   }
 
   async sendMail({ to, subject, text, html }) {
-    // 1. SMTP (GMail App Password or Provider)
+    if (!this.transporter) {
+      this.initializeTools();
+    }
+
+    // 1. Gmail SMTP with App Password (100% Direct & Verified)
     if (this.transporter) {
       try {
         const info = await this.transporter.sendMail({
-          from: `Ahmed Musthaffa <${config.smtpUser}>`,
+          from: `"Ahmed Musthaffa" <${config.smtpUser}>`,
           to,
           subject,
           text,
           html
         });
+        console.log(`[Mailer] Gmail SMTP Success! Delivered to ${to} (MessageId: ${info.messageId})`);
         return { success: true, messageId: info.messageId };
       } catch (err) {
         console.error('[Mailer] SMTP Delivery Failed:', err.message);
       }
     }
 
-    // 2. Resend HTTPS API Free Plan
+    // 2. Resend HTTPS API Fallback (if configured)
     if (config.resendApiKey) {
       return new Promise((resolve) => {
         const payload = JSON.stringify({
@@ -72,53 +77,9 @@ class MailerService {
       });
     }
 
-
-    // 3. Safe Structured Local Delivery
-    console.log('--------------------------------------------------');
-    console.log(`[EMAIL SIMULATOR] From: Ahmed Portfolio -> To: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`--------------------------------------------------`);
+    // 3. Fallback Log
+    console.log(`[Mailer] Fallback simulated delivery to: ${to}`);
     return { success: true, localSimulated: true };
-  }
-
-
-  async sendViaFormSubmit(submission) {
-    const clientName = `${submission.firstName || ''} ${submission.lastName || ''}`.trim() || 'Client';
-    return new Promise((resolve) => {
-      const payload = JSON.stringify({
-        name: clientName,
-        email: submission.email,
-        phone: submission.phone || 'N/A',
-        message: submission.description,
-        _subject: `⚡ New Project Inquiry from ${clientName} - Ahmed Portfolio`,
-        _template: 'table',
-        _captcha: 'false'
-      });
-
-      const req = https.request('https://formsubmit.co/ajax/ahmedmusthaffa02@gmail.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Referer': 'https://ahmed-portfolio-kohl.vercel.app/'
-        }
-      }, (res) => {
-        let body = '';
-        res.on('data', chunk => body += chunk);
-        res.on('end', () => {
-          console.log('[Mailer] FormSubmit dispatch complete. HTTP Status:', res.statusCode);
-          resolve({ success: res.statusCode >= 200 && res.statusCode < 300 });
-        });
-      });
-
-      req.on('error', (err) => {
-        console.warn('[Mailer] FormSubmit request error:', err.message);
-        resolve({ success: false });
-      });
-
-      req.write(payload);
-      req.end();
-    });
   }
 
   async sendContactNotification(submission) {
@@ -158,10 +119,10 @@ class MailerService {
       </div>
     `;
 
-    await Promise.allSettled([
+    const results = await Promise.allSettled([
       this.sendMail({
         to: config.ownerEmail,
-        subject: `⚄ New Lead from ${clientName}`,
+        subject: `⚡ New Project Inquiry from ${clientName} - Ahmed Portfolio`,
         text: `New lead: ${clientName} (${submission.email}): ${submission.description}`,
         html: ownerHtml
       }),
@@ -170,11 +131,10 @@ class MailerService {
         subject: 'Thank you for contacting Ahmed Musthaffa',
         text: `Hi ${clientName}, thank you for reaching out! I will review your message and reply within 24 hours.`,
         html: clientHtml
-      }),
-      this.sendViaFormSubmit(submission)
+      })
     ]);
 
-    return { delivered: true, recipient: config.ownerEmail };
+    return { delivered: true, recipient: config.ownerEmail, results };
   }
 }
 

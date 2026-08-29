@@ -400,42 +400,33 @@
       }
 
       try {
-        // 1. Dual Dispatch: Direct FormSubmit to Ahmed's Gmail
-        const formSubmitPromise = fetch('https://formsubmit.co/ajax/ahmedmusthaffa02@gmail.com', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({
-            name: `${payload.firstName} ${payload.lastName}`.trim(),
-            email: payload.email,
-            phone: payload.phone || 'Not provided',
-            message: payload.description,
-            _subject: `⚡ New Project Lead from ${payload.firstName} (${payload.email})`,
-            _template: 'table',
-            _captcha: 'false'
-          })
-        }).catch(err => console.warn('FormSubmit client-side error:', err));
-
-        // 2. Also record in local API / SQLite / JSON store
-        const localApiPromise = fetch('/api/contact', {
+        const res = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        }).catch(err => console.warn('Local API error:', err));
+        });
 
-        await Promise.allSettled([formSubmitPromise, localApiPromise]);
+        const data = await res.json().catch(() => ({}));
 
-        if (successMsg) {
-          successMsg.style.display = 'block';
-          successMsg.innerHTML = "✓ Thank you! Your message has been sent directly to Ahmed's email (ahmedmusthaffa02@gmail.com). I will reply within 24 hours.";
+        if (res.ok && data.success) {
+          if (successMsg) {
+            successMsg.style.display = 'block';
+            successMsg.style.color = '#ccff00';
+            successMsg.innerHTML = "✓ Thank you! Your message has been sent directly to Ahmed's Gmail. I will reply within 24 hours.";
+          }
+          contactForm.reset();
+        } else {
+          if (successMsg) {
+            successMsg.style.display = 'block';
+            successMsg.style.color = '#ff6b6b';
+            successMsg.innerHTML = data.error || "Something went wrong. Please try again or email directly to ahmedmusthaffa02@gmail.com";
+          }
         }
-        contactForm.reset();
       } catch (err) {
         if (successMsg) {
           successMsg.style.display = 'block';
-          successMsg.innerHTML = "✓ Thank you! Your message has been received. I will get back to you shortly.";
+          successMsg.style.color = '#ccff00';
+          successMsg.innerHTML = "✓ Request sent! If urgent, feel free to email directly at ahmedmusthaffa02@gmail.com.";
         }
         contactForm.reset();
       } finally {

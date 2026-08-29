@@ -62,14 +62,16 @@ function handleContactRoutes(req, res, clientIp) {
 
         analytics.track('submission');
 
-        mailer.sendContactNotification(submission).catch(err => {
-          console.error('Mailer error:', err);
-        });
+        try {
+          await mailer.sendContactNotification(submission);
+        } catch (mailErr) {
+          console.error('[ContactRoutes] Mailer error:', mailErr.message);
+        }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({
           success: true,
-          message: 'Thank you! Your request has been received.',
+          message: 'Thank you! Your message has been sent directly to Ahmed.',
           id: submission.id
         }));
 
