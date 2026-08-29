@@ -383,58 +383,63 @@
   const submitBtn = document.getElementById('form-submit-btn');
 
   if (contactForm) {
-    contactForm.addEventListener('submit', async (e) => {
+    contactForm.addEventListener('submit', (e) => {
       e.preventDefault();
-
+      
       const payload = {
-        firstName: document.getElementById('contact-first-name')?.value || '',
-        lastName: document.getElementById('contact-last-name')?.value || '',
-        email: document.getElementById('contact-email')?.value || '',
-        phone: document.getElementById('contact-phone')?.value || '',
-        description: document.getElementById('contact-description')?.value || ''
+        firstName: document.getElementById('contact-first-name')?.value.trim() || '',
+        lastName: document.getElementById('contact-last-name')?.value.trim() || '',
+        email: document.getElementById('contact-email')?.value.trim() || '',
+        phone: document.getElementById('contact-phone')?.value.trim() || '',
+        description: document.getElementById('contact-description')?.value.trim() || ''
       };
 
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Sending...</span>';
-      }
+      const clientName = `${payload.firstName} ${payload.lastName}`.trim() || 'Client';
+      const subject = encodeURIComponent(`⚡ Project Inquiry from ${clientName}`);
+      const bodyText = encodeURIComponent(
+        `Hi Ahmed,\n\n` +
+        `I am contacting you from your portfolio website.\n\n` +
+        `• Name: ${clientName}\n` +
+        `• Email: ${payload.email}\n` +
+        `• Phone: ${payload.phone || 'N/A'}\n\n` +
+        `Project Details:\n${payload.description}\n\n` +
+        `Looking forward to hearing from you!`
+      );
 
+      const mailtoUrl = `mailto:ahmedmusthaffa02@gmail.com?subject=${subject}&body=${bodyText}`;
+      const gmailWebUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=ahmedmusthaffa02@gmail.com&su=${subject}&body=${bodyText}`;
+
+      // Save submission to database in background
+      fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+
+      // Launch default mail client pre-filled
       try {
-        const res = await fetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        window.location.href = mailtoUrl;
+      } catch (err) {}
 
-        const data = await res.json().catch(() => ({}));
-
-        if (res.ok && data.success) {
-          if (successMsg) {
-            successMsg.style.display = 'block';
-            successMsg.style.color = '#ccff00';
-            successMsg.innerHTML = "✓ Thank you! Your message has been sent directly to Ahmed's Gmail. I will reply within 24 hours.";
-          }
-          contactForm.reset();
-        } else {
-          if (successMsg) {
-            successMsg.style.display = 'block';
-            successMsg.style.color = '#ff6b6b';
-            successMsg.innerHTML = data.error || "Something went wrong. Please try again or email directly to ahmedmusthaffa02@gmail.com";
-          }
-        }
-      } catch (err) {
-        if (successMsg) {
-          successMsg.style.display = 'block';
-          successMsg.style.color = '#ccff00';
-          successMsg.innerHTML = "✓ Request sent! If urgent, feel free to email directly at ahmedmusthaffa02@gmail.com.";
-        }
-        contactForm.reset();
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = '<span>Submit Request</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>';
-        }
+      if (successMsg) {
+        successMsg.style.display = 'block';
+        successMsg.innerHTML = `
+          <div style="background: rgba(204, 255, 0, 0.08); border: 1.5px solid #ccff00; padding: 1.2rem; border-radius: 10px; margin-top: 1.2rem; text-align: center;">
+            <p style="color: #ffffff; font-weight: 700; font-size: 1rem; margin-bottom: 0.4rem;">✓ Your Message is Ready to Send!</p>
+            <p style="color: rgba(255, 255, 255, 0.75); font-size: 0.85rem; margin-bottom: 1rem;">If your mail app didn't open automatically, choose an option below:</p>
+            <div style="display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap;">
+              <a href="${mailtoUrl}" style="background: #ccff00; color: #000; padding: 0.65rem 1.2rem; border-radius: 50px; font-weight: 800; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <span>✉️ Open in Mail App</span>
+              </a>
+              <a href="${gmailWebUrl}" target="_blank" rel="noopener noreferrer" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.25); padding: 0.65rem 1.2rem; border-radius: 50px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <span>🌐 Open in Gmail Web</span>
+              </a>
+            </div>
+          </div>
+        `;
       }
+
+      contactForm.reset();
     });
   }
 })();
