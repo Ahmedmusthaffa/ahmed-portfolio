@@ -395,15 +395,31 @@
       };
 
       const clientName = `${payload.firstName} ${payload.lastName}`.trim() || 'Client';
-      const subject = encodeURIComponent(`⚡ Project Inquiry from ${clientName}`);
+      const clientEmail = payload.email || 'Not provided';
+      const clientPhone = payload.phone || 'Not provided';
+      const timeStamp = new Date().toLocaleString();
+
+      // Clear, unmistakable subject line showing the client's name & email at a glance
+      const subject = encodeURIComponent(`⚡ Lead: ${clientName} (${clientEmail}) - Portfolio Inquiry`);
+
+      // Executive structured layout with client details on top and project description below
       const bodyText = encodeURIComponent(
-        `Hi Ahmed,\n\n` +
-        `I am contacting you from your portfolio website.\n\n` +
-        `• Name: ${clientName}\n` +
-        `• Email: ${payload.email}\n` +
-        `• Phone: ${payload.phone || 'N/A'}\n\n` +
-        `Project Details:\n${payload.description}\n\n` +
-        `Looking forward to hearing from you!`
+        `==================================================\n` +
+        `⚡ NEW CLIENT INQUIRY - AHMED PORTFOLIO\n` +
+        `==================================================\n\n` +
+        `👤 CLIENT INFORMATION:\n` +
+        `--------------------------------------------------\n` +
+        `• Full Name:     ${clientName}\n` +
+        `• Email Address: ${clientEmail}\n` +
+        `• Phone Number:  ${clientPhone}\n` +
+        `• Submitted At:  ${timeStamp}\n\n` +
+        `📋 PROJECT DESCRIPTION & REQUIREMENTS:\n` +
+        `--------------------------------------------------\n` +
+        `${payload.description}\n\n` +
+        `==================================================\n` +
+        `💡 NOTE FOR AHMED:\n` +
+        `Hit "Reply" in your email app to write directly back to ${clientName} at ${clientEmail}.\n` +
+        `==================================================`
       );
 
       const mailtoUrl = `mailto:ahmedmusthaffa02@gmail.com?subject=${subject}&body=${bodyText}`;

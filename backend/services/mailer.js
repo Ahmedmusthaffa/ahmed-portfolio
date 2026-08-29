@@ -122,7 +122,7 @@ class MailerService {
     const results = await Promise.allSettled([
       this.sendMail({
         to: config.ownerEmail,
-        subject: `⚡ New Project Inquiry from ${clientName} - Ahmed Portfolio`,
+        subject: `⚡ Lead: ${clientName} (${submission.email}) - Portfolio Inquiry`,
         text: `New lead: ${clientName} (${submission.email}): ${submission.description}`,
         html: ownerHtml
       }),
