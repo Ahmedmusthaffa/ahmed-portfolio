@@ -38,6 +38,16 @@ function createProductionServer() {
       logRequest(req, res, Date.now() - startTime);
     });
 
+    // Social Browser-Preserving Redirects
+    if (req.url === '/linkedin' || req.url === '/linkedin/') {
+      res.writeHead(302, { 'Location': 'https://www.linkedin.com/in/ahmed-musthaffa-58956a371?trk=public_profile_browserview' });
+      return res.end();
+    }
+    if (req.url === '/github' || req.url === '/github/') {
+      res.writeHead(302, { 'Location': 'https://github.com/Ahmedmusthaffa' });
+      return res.end();
+    }
+
     // 2. Health Endpoint
     if (req.method === 'GET' && req.url === '/api/health') {
       return handleHealthCheck(req, res);

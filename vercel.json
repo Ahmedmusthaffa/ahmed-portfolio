@@ -1,5 +1,17 @@
 {
   "version": 2,
+  "redirects": [
+    {
+      "source": "/linkedin",
+      "destination": "https://www.linkedin.com/in/ahmed-musthaffa-58956a371?trk=public_profile_browserview",
+      "permanent": false
+    },
+    {
+      "source": "/github",
+      "destination": "https://github.com/Ahmedmusthaffa",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
