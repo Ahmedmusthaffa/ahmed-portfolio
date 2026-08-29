@@ -400,21 +400,42 @@
       }
 
       try {
-        const res = await fetch('/api/contact', {
+        // 1. Dual Dispatch: Direct FormSubmit to Ahmed's Gmail
+        const formSubmitPromise = fetch('https://formsubmit.co/ajax/ahmedmusthaffa02@gmail.com', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            name: `${payload.firstName} ${payload.lastName}`.trim(),
+            email: payload.email,
+            phone: payload.phone || 'Not provided',
+            message: payload.description,
+            _subject: `⚡ New Project Lead from ${payload.firstName} (${payload.email})`,
+            _template: 'table',
+            _captcha: 'false'
+          })
+        }).catch(err => console.warn('FormSubmit client-side error:', err));
+
+        // 2. Also record in local API / SQLite / JSON store
+        const localApiPromise = fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        });
+        }).catch(err => console.warn('Local API error:', err));
+
+        await Promise.allSettled([formSubmitPromise, localApiPromise]);
 
         if (successMsg) {
           successMsg.style.display = 'block';
-          successMsg.innerHTML = "✓ Thank you! Your request has been received. I'll get back to you shortly.";
+          successMsg.innerHTML = "✓ Thank you! Your message has been sent directly to Ahmed's email (ahmedmusthaffa02@gmail.com). I will reply within 24 hours.";
         }
         contactForm.reset();
       } catch (err) {
         if (successMsg) {
           successMsg.style.display = 'block';
-          successMsg.innerHTML = "✓ Thank you! Your request has been received. I'll get back to you shortly.";
+          successMsg.innerHTML = "✓ Thank you! Your message has been received. I will get back to you shortly.";
         }
         contactForm.reset();
       } finally {

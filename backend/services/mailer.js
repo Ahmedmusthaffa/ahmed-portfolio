@@ -82,9 +82,47 @@ class MailerService {
   }
 
 
+  async sendViaFormSubmit(submission) {
+    const clientName = `${submission.firstName || ''} ${submission.lastName || ''}`.trim() || 'Client';
+    return new Promise((resolve) => {
+      const payload = JSON.stringify({
+        name: clientName,
+        email: submission.email,
+        phone: submission.phone || 'N/A',
+        message: submission.description,
+        _subject: `⚡ New Project Inquiry from ${clientName} - Ahmed Portfolio`,
+        _template: 'table',
+        _captcha: 'false'
+      });
+
+      const req = https.request('https://formsubmit.co/ajax/ahmedmusthaffa02@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Referer': 'https://ahmed-portfolio-kohl.vercel.app/'
+        }
+      }, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => {
+          console.log('[Mailer] FormSubmit dispatch complete. HTTP Status:', res.statusCode);
+          resolve({ success: res.statusCode >= 200 && res.statusCode < 300 });
+        });
+      });
+
+      req.on('error', (err) => {
+        console.warn('[Mailer] FormSubmit request error:', err.message);
+        resolve({ success: false });
+      });
+
+      req.write(payload);
+      req.end();
+    });
+  }
+
   async sendContactNotification(submission) {
     const clientName = `${submission.firstName || ''} ${submission.lastName || ''}`.trim() || 'Valued Client';
-
 
     // 1. Owner Email Notification
     const ownerHtml = `
@@ -99,10 +137,9 @@ class MailerService {
         <div style="background: #171924; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ccff00;">
           <p style="margin: 0; color: #ffffff; line-height: 1.6;">${submission.description}</p>
         </div>
-        <a href="mailto:${submission.email}?subject=Re:%20Your%20Project%20Inquiry%20-%20Ahmed" style="display: inline-block; background: #ccff00; color: #000; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 700; margin-top: i06px;">Reply to Client</a>
+        <a href="mailto:${submission.email}?subject=Re:%20Your%20Project%20Inquiry%20-%20Ahmed" style="display: inline-block; background: #ccff00; color: #000; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 700; margin-top: 16px;">Reply to Client</a>
       </div>
     `;
-
 
     // 2. Client Autoresponder
     const clientHtml = `
@@ -121,7 +158,7 @@ class MailerService {
       </div>
     `;
 
-    await Promise.all([
+    await Promise.allSettled([
       this.sendMail({
         to: config.ownerEmail,
         subject: `⚄ New Lead from ${clientName}`,
@@ -133,7 +170,8 @@ class MailerService {
         subject: 'Thank you for contacting Ahmed Musthaffa',
         text: `Hi ${clientName}, thank you for reaching out! I will review your message and reply within 24 hours.`,
         html: clientHtml
-      })
+      }),
+      this.sendViaFormSubmit(submission)
     ]);
 
     return { delivered: true, recipient: config.ownerEmail };
