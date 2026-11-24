@@ -5,7 +5,7 @@
   const FRAME_DIR = 'background video-hd';
   
   const canvas = document.getElementById('frame-canvas');
-  const ctx = canvas.getContext('2d', { alpha: false });
+  const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
   
   const loader = document.getElementById('loader');
   const loaderBar = document.getElementById('loader-bar');
@@ -20,13 +20,29 @@
   let targetScrollProgress = 0;
   let currentScrollProgress = 0;
   let currentFrameIndex = 0;
+  let lastDrawnSource = null;
   let lastDrawnFrameIndex = -1;
   let isLoaded = false;
+  let needsRedraw = false;
   
-  // Format frame filename with URL encoding starting from frame-024.webp to frame-191.webp
+  // Cache layout metrics to eliminate forced reflows during scroll
+  let cachedMaxScroll = 1;
+  let cachedWinW = window.innerWidth || 1920;
+  let cachedWinH = window.innerHeight || 1080;
+  
+  function updateScrollMetrics() {
+    cachedWinW = window.innerWidth || document.documentElement.clientWidth;
+    cachedWinH = window.innerHeight || document.documentElement.clientHeight;
+    const docH = Math.max(
+      document.body.scrollHeight || 0,
+      document.documentElement.scrollHeight || 0
+    );
+    cachedMaxScroll = Math.max(1, docH - cachedWinH);
+  }
+
   function getFrameUrl(index) {
     const frameNum = String(index + FIRST_FRAME_INDEX).padStart(3, '0');
-    return encodeURI(`${FRAME_DIR}/frame-${frameNum}.webp`);
+    return `${FRAME_DIR}/frame-${frameNum}.webp`;
   }
 
   function finishLoading() {
@@ -36,13 +52,12 @@
       loader.classList.add('hidden');
       setTimeout(() => {
         loader.style.display = 'none';
-      }, 400);
+      }, 350);
     }
-    lastDrawnFrameIndex = -1;
-    renderFrame(currentFrameIndex, 0);
+    needsRedraw = true;
   }
   
-  // Find the nearest available loaded frame in memory (ImageBitmap or HTMLImageElement)
+  // Fast nearest-frame lookup with cached index
   function getNearestLoadedFrame(targetIndex) {
     if (bitmaps[targetIndex]) {
       return { frame: bitmaps[targetIndex], isExact: true };
@@ -51,7 +66,7 @@
       return { frame: frames[targetIndex], isExact: true };
     }
     
-    // Search backward first, then forward
+    // Look outwards in both directions
     for (let offset = 1; offset < TOTAL_FRAMES; offset++) {
       const prevIdx = targetIndex - offset;
       if (prevIdx >= 0) {
@@ -67,14 +82,34 @@
     return { frame: null, isExact: false };
   }
 
-  // Load a single frame with createImageBitmap GPU Acceleration & HTMLImageElement fallback
-  function loadFrame(i, priority = false) {
+  // Paced Loading Queue (Prevents network & main thread congestion)
+  const loadQueue = [];
+  let activeLoads = 0;
+  const MAX_CONCURRENT_LOADS = 4;
+
+  function processQueue() {
+    while (activeLoads < MAX_CONCURRENT_LOADS && loadQueue.length > 0) {
+      const item = loadQueue.shift();
+      executeLoadFrame(item.index, item.priority);
+    }
+  }
+
+  function queueFrame(i, priority = false) {
     if (i < 0 || i >= TOTAL_FRAMES || requestedIndices.has(i)) return;
     requestedIndices.add(i);
 
+    if (priority) {
+      loadQueue.unshift({ index: i, priority: true });
+    } else {
+      loadQueue.push({ index: i, priority: false });
+    }
+    processQueue();
+  }
+
+  function executeLoadFrame(i, priority = false) {
+    activeLoads++;
     const url = getFrameUrl(i);
 
-    // Fast Path: createImageBitmap (Off-thread GPU VRAM texture decoding)
     if (typeof window.createImageBitmap === 'function' && typeof window.fetch === 'function') {
       fetch(url, { priority: priority ? 'high' : 'auto' })
         .then(res => {
@@ -84,16 +119,14 @@
         .then(blob => createImageBitmap(blob, { imageOrientation: 'none', premultiplyAlpha: 'premultiply' }))
         .then(bmp => {
           bitmaps[i] = bmp;
-          loadedCount++;
-          updateProgress();
-          if (Math.abs(i - currentFrameIndex) <= 4) {
-            lastDrawnFrameIndex = -1;
-            renderFrame(currentFrameIndex);
-          }
+          onFrameReady(i);
         })
         .catch(() => {
-          // Fallback to standard Image
           fallbackLoadImage(i, url, priority);
+        })
+        .finally(() => {
+          activeLoads--;
+          processQueue();
         });
       return;
     }
@@ -107,157 +140,132 @@
     frames[i] = img;
 
     img.onload = () => {
-      if (img.decode) {
-        img.decode().catch(() => {});
-      }
-      loadedCount++;
-      updateProgress();
-      if (Math.abs(i - currentFrameIndex) <= 4) {
-        lastDrawnFrameIndex = -1;
-        renderFrame(currentFrameIndex);
-      }
+      onFrameReady(i);
+      activeLoads = Math.max(0, activeLoads - 1);
+      processQueue();
     };
 
     img.onerror = () => {
-      loadedCount++;
-      updateProgress();
+      activeLoads = Math.max(0, activeLoads - 1);
+      processQueue();
     };
 
     img.src = url;
   }
 
-  // Prioritized Two-Phase Streaming:
-  // Phase 1: Keyframe skeleton across the whole video (every 4th frame) for instant 100% coverage
-  // Phase 2: Active sliding window around the user's scroll position
-  function preloadFrames() {
-    // 1. Load the first 15 consecutive frames immediately for hero section
-    for (let i = 0; i < Math.min(15, TOTAL_FRAMES); i++) {
-      loadFrame(i, true);
-    }
-
-    // 2. Load keyframes every 4th frame across the entire timeline (0, 4, 8, 12... 230)
-    for (let i = 16; i < TOTAL_FRAMES; i += 4) {
-      loadFrame(i, false);
-    }
-
-    // Dismiss loader quickly once the hero frames are ready
-    const initialCheckTimer = setInterval(() => {
-      let heroReady = true;
-      for (let i = 0; i < 8; i++) {
-        if (!bitmaps[i] && (!frames[i] || !frames[i].complete)) {
-          heroReady = false;
-          break;
-        }
-      }
-      if (heroReady || loadedCount >= 20) {
-        clearInterval(initialCheckTimer);
+  function onFrameReady(i) {
+    loadedCount++;
+    if (!isLoaded) {
+      const percent = Math.min(100, Math.floor((loadedCount / 20) * 100));
+      if (loaderBar) loaderBar.style.width = `${percent}%`;
+      if (loaderPercent) loaderPercent.innerText = `${percent}%`;
+      if (loadedCount >= 12 || (bitmaps[0] && bitmaps[4])) {
         finishLoading();
       }
-    }, 40);
+    }
+    if (Math.abs(i - currentFrameIndex) <= 2) {
+      needsRedraw = true;
+    }
+  }
 
-    // Safety timeout: 1.5s max
-    setTimeout(() => {
-      clearInterval(initialCheckTimer);
-      finishLoading();
-    }, 1500);
+  function preloadFrames() {
+    // 1. Critical hero frames first
+    for (let i = 0; i < Math.min(12, TOTAL_FRAMES); i++) {
+      queueFrame(i, true);
+    }
 
-    // 3. Eagerly fill in remaining frames in background
+    // 2. Uniform keyframes across whole video
+    for (let i = 12; i < TOTAL_FRAMES; i += 4) {
+      queueFrame(i, false);
+    }
+
+    // 3. Fallback loader dismiss
+    setTimeout(finishLoading, 1200);
+
+    // 4. Fill in remaining frames steadily in background
     setTimeout(() => {
       for (let i = 0; i < TOTAL_FRAMES; i++) {
         if (!requestedIndices.has(i)) {
-          loadFrame(i, false);
+          queueFrame(i, false);
         }
       }
-    }, 500);
+    }, 400);
   }
 
-  // Active Sliding Window Streamer around user's scroll position
+  // Prioritize streaming around user's active viewport position
   function streamNearFrames(centerIdx) {
-    const WINDOW_RADIUS = 20;
+    const WINDOW_RADIUS = 12;
     const start = Math.max(0, centerIdx - WINDOW_RADIUS);
     const end = Math.min(TOTAL_FRAMES - 1, centerIdx + WINDOW_RADIUS);
     for (let i = start; i <= end; i++) {
       if (!requestedIndices.has(i)) {
-        loadFrame(i, true);
+        queueFrame(i, true);
       }
     }
   }
 
-  function updateProgress() {
-    const percent = Math.min(100, Math.floor((loadedCount / TOTAL_FRAMES) * 100));
-    if (loaderBar) loaderBar.style.width = `${percent}%`;
-    if (loaderPercent) loaderPercent.innerText = `${percent}%`;
-  }
-  
-  // Resize canvas to fit window dimensions maintaining 3x DPR scaling & reset transform matrix
+  // Smooth Canvas Resizing without DPR memory bloat
   function resizeCanvas() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 3);
-    const winW = window.innerWidth || document.documentElement.clientWidth;
-    const winH = window.innerHeight || document.documentElement.clientHeight;
-    canvas.width = Math.floor(winW * dpr);
-    canvas.height = Math.floor(winH * dpr);
+    updateScrollMetrics();
+    // Clamp DPR to 1.5 to eliminate 4K-6K canvas fill-rate GPU bottlenecks
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     
-    // Reset transform matrix before scaling to prevent cumulative zoom multiplication
+    canvas.width = Math.round(cachedWinW * dpr);
+    canvas.height = Math.round(cachedWinH * dpr);
+    
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingQuality = 'medium';
     
-    // Force re-render current frame on resize
+    lastDrawnSource = null;
     lastDrawnFrameIndex = -1;
-    renderFrame(currentFrameIndex);
+    needsRedraw = true;
   }
-  
-  // Draw single rock-solid frame on canvas with 'cover' object-fit scaling
-  function renderFrame(index) {
-    if (index === lastDrawnFrameIndex) return;
 
-    const { frame: img, isExact } = getNearestLoadedFrame(index);
+  // Fast single-pass frame renderer
+  function renderFrame(index) {
+    const { frame: img } = getNearestLoadedFrame(index);
     if (!img) return;
     
-    const width = window.innerWidth || document.documentElement.clientWidth;
-    const height = window.innerHeight || document.documentElement.clientHeight;
-    
-    const naturalW = img.width || img.naturalWidth;
-    const naturalH = img.height || img.naturalHeight;
-    if (!naturalW || !naturalH) return;
+    // Skip redraw if identical frame is already displayed
+    if (img === lastDrawnSource && index === lastDrawnFrameIndex) return;
+
+    const naturalW = img.width || img.naturalWidth || 1920;
+    const naturalH = img.height || img.naturalHeight || 1080;
 
     const imgRatio = naturalW / naturalH;
-    const canvasRatio = width / height;
+    const canvasRatio = cachedWinW / cachedWinH;
     
     let drawWidth, drawHeight, offsetX, offsetY;
     
     if (canvasRatio > imgRatio) {
-      drawWidth = Math.round(width);
-      drawHeight = Math.round(width / imgRatio);
+      drawWidth = Math.round(cachedWinW);
+      drawHeight = Math.round(cachedWinW / imgRatio);
       offsetX = 0;
-      offsetY = Math.round((height - drawHeight) / 2);
+      offsetY = Math.round((cachedWinH - drawHeight) * 0.5);
     } else {
-      drawWidth = Math.round(height * imgRatio);
-      drawHeight = Math.round(height);
-      offsetX = Math.round((width - drawWidth) / 2);
+      drawWidth = Math.round(cachedWinH * imgRatio);
+      drawHeight = Math.round(cachedWinH);
+      offsetX = Math.round((cachedWinW - drawWidth) * 0.5);
       offsetY = 0;
     }
     
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     
-    if (isExact) {
-      lastDrawnFrameIndex = index;
-    }
+    lastDrawnSource = img;
+    lastDrawnFrameIndex = index;
+    needsRedraw = false;
   }
-  
-  // Calculate target scroll progress [0, 1]
+
+  // Ultra-fast zero-reflow scroll handler
   function updateScrollTarget() {
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
-    const winH = window.innerHeight || document.documentElement.clientHeight;
-    const maxScroll = Math.max(1, (document.documentElement.scrollHeight || document.body.scrollHeight) - winH);
-    targetScrollProgress = Math.min(1, Math.max(0, scrollY / maxScroll));
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+    targetScrollProgress = Math.min(1, Math.max(0, scrollY / cachedMaxScroll));
     
-    // Proactively stream frames around the targeted scroll point
     const estimatedFrame = Math.round(targetScrollProgress * (TOTAL_FRAMES - 1));
     streamNearFrames(estimatedFrame);
     
-    // Fade out scroll hint when user starts scrolling
     if (scrollHint) {
       if (scrollY > 50) {
         scrollHint.style.opacity = '0';
@@ -266,19 +274,21 @@
       }
     }
   }
-  
-  // Rock-Solid Silky Smooth 60-120 FPS Animation Loop
+
+  // Responsive, fluid 60-120 FPS Animation Loop
   function startAnimationLoop() {
     function loop() {
       const diff = targetScrollProgress - currentScrollProgress;
       const absDiff = Math.abs(diff);
 
-      if (absDiff > 0.0001) {
-        // Smooth exponential damping (responsive & zero oscillation)
-        const lerpFactor = absDiff > 0.05 ? 0.22 : 0.14;
+      if (absDiff > 0.00015) {
+        // Snappy responsive lerp tracking (tight, fluid, zero lag)
+        const lerpFactor = absDiff > 0.08 ? 0.38 : 0.28;
         currentScrollProgress += diff * lerpFactor;
-      } else {
+        needsRedraw = true;
+      } else if (currentScrollProgress !== targetScrollProgress) {
         currentScrollProgress = targetScrollProgress;
+        needsRedraw = true;
       }
       
       const frameIdx = Math.min(
@@ -286,35 +296,58 @@
         Math.max(0, Math.round(currentScrollProgress * (TOTAL_FRAMES - 1)))
       );
       
-      currentFrameIndex = frameIdx;
-      renderFrame(currentFrameIndex);
+      if (frameIdx !== currentFrameIndex) {
+        currentFrameIndex = frameIdx;
+        needsRedraw = true;
+      }
+
+      if (needsRedraw) {
+        renderFrame(currentFrameIndex);
+      }
       
       requestAnimationFrame(loop);
     }
     requestAnimationFrame(loop);
   }
   
-  // Mobile-Optimized Event Listeners
+  // Mobile & Desktop Event Listeners with Debounce
   let resizeTimer = null;
   function onWindowResize() {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       resizeCanvas();
       updateScrollTarget();
-    }, 60);
+    }, 40);
   }
 
   window.addEventListener('scroll', updateScrollTarget, { passive: true });
-  window.addEventListener('resize', onWindowResize);
-  window.addEventListener('orientationchange', onWindowResize);
+  window.addEventListener('resize', onWindowResize, { passive: true });
+  window.addEventListener('orientationchange', onWindowResize, { passive: true });
   window.addEventListener('touchstart', updateScrollTarget, { passive: true });
   window.addEventListener('touchmove', updateScrollTarget, { passive: true });
-  window.addEventListener('DOMContentLoaded', () => {
-    updateScrollTarget();
+  
+  // Smooth scroll for internal anchor clicks
+  document.addEventListener('DOMContentLoaded', () => {
+    updateScrollMetrics();
     resizeCanvas();
+    updateScrollTarget();
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        const hash = this.getAttribute('href');
+        if (hash && hash !== '#') {
+          const targetEl = document.querySelector(hash);
+          if (targetEl) {
+            e.preventDefault();
+            targetEl.scrollIntoView({ behavior: 'smooth' });
+          }
+        }
+      });
+    });
   });
 
   // Initialize
+  updateScrollMetrics();
   resizeCanvas();
   preloadFrames();
   startAnimationLoop();
