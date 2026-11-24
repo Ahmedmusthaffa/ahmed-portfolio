@@ -1,0 +1,211 @@
+﻿import os
+
+html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HD Quality Comparison - Ahmed Portfolio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #090a0f;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2rem 1rem 4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .header { text-align: center; max-width: 700px; margin-bottom: 2rem; }
+    .badge {
+      display: inline-block;
+      padding: 0.35rem 0.9rem;
+      background: rgba(204, 255, 0, 0.15);
+      border: 1px solid #ccff00;
+      color: #ccff00;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+    }
+    h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+    p { color: rgba(255, 255, 255, 0.7); font-size: 0.95rem; line-height: 1.5; }
+    .btns {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      padding: 8px 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .btn.active, .btn:hover { background: #ccff00; color: #000; border-color: #ccff00; }
+    .box {
+      position: relative;
+      width: 100%;
+      max-width: 960px;
+      height: 540px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+      background: #000;
+      user-select: none;
+      cursor: ew-resize;
+    }
+    .layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    .layer img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+    .hd-layer { clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%); }
+    .line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 3px;
+      background: #ccff00;
+      box-shadow: 0 0 14px rgba(204, 255, 0, 0.9);
+    }
+    .handle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 42px;
+      height: 42px;
+      background: #ccff00;
+      color: #000;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .tag {
+      position: absolute;
+      top: 16px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      pointer-events: none;
+      z-index: 5;
+    }
+    .tag-left { left: 16px; background: rgba(255, 60, 40, 0.9); color: #fff; }
+    .tag-right { right: 16px; background: rgba(204, 255, 0, 0.95); color: #000; }
+    .info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      width: 100%;
+      max-width: 960px;
+      margin-top: 1.5rem;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+    .card h3 { font-size: 1rem; margin-bottom: 0.4rem; }
+    .card.hd h3 { color: #ccff00; }
+    .card.compressed h3 { color: #ff3c28; }
+    .stats { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); line-height: 1.5; }
+    @media (max-width: 768px) {
+      .box { height: 340px; }
+      .info { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="badge">Side-by-Side Quality Inspector</div>
+    <h1>Before & After Quality Inspector</h1>
+    <p>Drag the center slider left and right to compare the uncompressed HD frame (extracted directly from your 9.96 MB video) against the current 35 KB ezgif compressed frame.</p>
+  </div>
+
+  <div class="btns">
+    <button class="btn active" onclick="setF('010', this)">Frame 010 (Intro)</button>
+    <button class="btn" onclick="setF('050', this)">Frame 050 (Turn)</button>
+    <button class="btn" onclick="setF('100', this)">Frame 100 (Profile)</button>
+    <button class="btn" onclick="setF('150', this)">Frame 150 (Ahead)</button>
+  </div>
+
+  <div class="box" id="box">
+    <div class="layer"><img id="imgL" src="background%20video/ezgif-frame-010.jpg" alt="Compressed"></div>
+    <div class="layer hd-layer" id="hd"><img id="imgR" src="sample-comparison/hd-frame-010.jpg" alt="HD"></div>
+    <div class="tag tag-left">Current (35 KB Compressed)</div>
+    <div class="tag tag-right">HD Pristine (Uncompressed)</div>
+    <div class="line" id="line"><div class="handle">⇄</div></div>
+  </div>
+
+  <div class="info">
+    <div class="card compressed">
+      <h3>⚠️ Current Ezgif Compression</h3>
+      <div class="stats">
+        • File Size: <strong>35 KB per frame</strong><br>
+        • Compression: High quantization (~40% quality)<br>
+        • Pixelation noise around edges, skin, and glasses.
+      </div>
+    </div>
+    <div class="card hd">
+      <h3>💎 Extracted from Your 9.96 MB Video</h3>
+      <div class="stats">
+        • File Size: <strong>425 KB JPEG (or 194 KB WebP)</strong><br>
+        • Clarity: <strong>96% Studio HD Crisp Quality</strong><br>
+        • Razor-sharp facial detail, zero pixelation noise.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const box = document.getElementById("box");
+    const hd = document.getElementById("hd");
+    const line = document.getElementById("line");
+    const imgL = document.getElementById("imgL");
+    const imgR = document.getElementById("imgR");
+
+    function setF(num, btn) {
+      document.querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+      imgL.src = "background%20video/ezgif-frame-" + num + ".jpg";
+      imgR.src = "sample-comparison/hd-frame-" + num + ".jpg";
+    }
+
+    let drag = false;
+    function move(clientX) {
+      const r = box.getBoundingClientRect();
+      let p = Math.max(0, Math.min(1, (clientX - r.left) / r.width)) * 100;
+      hd.style.clipPath = "polygon(" + p + "% 0, 100% 0, 100% 100%, " + p + "% 100%)";
+      line.style.left = p + "%";
+    }
+
+    box.addEventListener("mousedown", (e) => { drag = true; move(e.clientX); });
+    window.addEventListener("mouseup", () => { drag = false; });
+    window.addEventListener("mousemove", (e) => { if (drag) move(e.clientX); });
+
+    box.addEventListener("touchstart", (e) => { drag = true; move(e.touches[0].clientX); }, { passive: true });
+    window.addEventListener("touchend", () => { drag = false; });
+    window.addEventListener("touchmove", (e) => { if (drag && e.touches.length > 0) move(e.touches[0].clientX); }, { passive: true });
+  </script>
+</body>
+</html>
+"""
+
+with open("compare.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+print("compare.html successfully created!")
