@@ -6,7 +6,7 @@
 <style>
   @page {
     size: A4;
-    margin: 8mm 12mm 8mm 12mm;
+    margin: 6mm 10mm 6mm 10mm;
   }
   * {
     box-sizing: border-box;
@@ -16,8 +16,8 @@
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: #1e293b;
-    line-height: 1.27;
-    font-size: 8.6pt;
+    line-height: 1.23;
+    font-size: 8.3pt;
     background: #fff;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -168,7 +168,7 @@
 <div class="section">
   <div class="section-title">Technical Skills</div>
   <div class="skills-list">
-    <div class="skills-item"><span class="skills-label">Python &amp; Backend Web Dev:</span> Python, FastAPI, Flask, REST API Architecture, SQLite, PostgreSQL, LangChain, FAISS, System Debugging</div>
+    <div class="skills-item"><span class="skills-label">Python &amp; Backend Web Dev:</span> Python, FastAPI, Flask, Model Context Protocol (MCP), LangGraph, Databricks Unity Catalog, REST APIs, SQLite, PostgreSQL, FAISS</div>
     <div class="skills-item"><span class="skills-label">Frontend Development:</span> JavaScript (ES6+), HTML5, CSS3, Responsive Web UI Design, Human-Computer Interaction (HCI)</div>
     <div class="skills-item"><span class="skills-label">Cloud, DevOps &amp; Architecture:</span> AWS (VPC, S3, Auto Scaling), Docker, Kubernetes, NGINX Load Balancing, Redis Caching, CI/CD</div>
     <div class="skills-item"><span class="skills-label">Core Competencies:</span> Data Structures &amp; Algorithms, Database Query Optimization, Code Reviews, Agile Methodologies</div>
@@ -221,17 +221,29 @@
   <div class="section-title">Projects &amp; Systems</div>
   <div class="item">
     <div class="item-header">
+      <span class="item-title">GovAgent MCP – Enterprise Governed Agentic AI Platform</span>
+      <span class="item-date">2026</span>
+    </div>
+    <div class="item-subtitle">Repository: <a href="https://github.com/Ahmedmusthaffa/GovAgent-MCP" target="_blank">github.com/Ahmedmusthaffa/GovAgent-MCP</a></div>
+    <ul class="bullets">
+      <li>Architected an enterprise agentic AI platform using Model Context Protocol (MCP), LangGraph state machine, and Databricks Unity Catalog governance.</li>
+      <li>Engineered 3-tier Role-Based Access Control (RBAC), dynamic column-level PII data masking (+1-555-****), and financial action guards ($500 intern approval cap).</li>
+      <li>Built multi-tool orchestration combining SQL database execution with semantic vector retrieval over corporate SOPs, validated by 24/24 passing unit & automated penetration tests.</li>
+    </ul>
+  </div>
+  <div class="item" style="margin-top: 2.5px;">
+    <div class="item-header">
       <span class="item-title">PitchCraft AI – Enterprise Speech &amp; Interview Performance Platform</span>
       <span class="item-date">2026</span>
     </div>
     <div class="item-subtitle">Repository: <a href="https://github.com/Ahmedmusthaffa/PitchCraft-AI" target="_blank">github.com/Ahmedmusthaffa/PitchCraft-AI</a></div>
     <ul class="bullets">
       <li>Architected a distributed speech performance platform in Python (FastAPI) and JavaScript implementing Rate Limiting, Sub-5ms Caching, and Circuit Breakers.</li>
-      <li>Configured an NGINX API Gateway with least-connections upstream load balancing, 60 req/min sliding-window rate limiting, and production Kubernetes manifests with HPA auto-scaling.</li>
-      <li>Engineered in-browser speech recognition with phonetic verbal filler detection ("uhh", "ahh", "umm") and heuristic failover, achieving 100% pass rates across 15 automated test suites.</li>
+      <li>Configured an NGINX API Gateway with least-connections load balancing, 60 req/min rate limiting, and production Kubernetes manifests with HPA auto-scaling.</li>
+      <li>Engineered in-browser speech recognition with phonetic verbal filler detection ("uhh", "ahh", "umm"), achieving 100% pass rates across 15 automated test suites.</li>
     </ul>
   </div>
-  <div class="item" style="margin-top: 3px;">
+  <div class="item" style="margin-top: 2.5px;">
     <div class="item-header">
       <span class="item-title">DocuMind – Privacy-Preserving Legal Document Intelligence System</span>
       <span class="item-date">2025 – 2026</span>
@@ -240,7 +252,6 @@
     <ul class="bullets">
       <li>Developed a full-stack, offline AI application using Python, Flask, and SQLite integrated with an accessible responsive frontend interface.</li>
       <li>Designed REST APIs processing multi-format document uploads (PDF/DOCX), FAISS vector embeddings, and asynchronous LLaMA 3 clause summarization.</li>
-      <li>Optimized database queries and conducted systematic debugging of memory limits, reducing retrieval latency by 35% on local hosting.</li>
     </ul>
   </div>
 </div>
