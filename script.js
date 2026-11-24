@@ -85,7 +85,7 @@
   // Paced Loading Queue (Prevents network & main thread congestion)
   const loadQueue = [];
   let activeLoads = 0;
-  const MAX_CONCURRENT_LOADS = 4;
+  const MAX_CONCURRENT_LOADS = 8;
 
   function processQueue() {
     while (activeLoads < MAX_CONCURRENT_LOADS && loadQueue.length > 0) {
@@ -156,10 +156,10 @@
   function onFrameReady(i) {
     loadedCount++;
     if (!isLoaded) {
-      const percent = Math.min(100, Math.floor((loadedCount / 20) * 100));
+      const percent = Math.min(100, Math.floor((loadedCount / 18) * 100));
       if (loaderBar) loaderBar.style.width = `${percent}%`;
       if (loaderPercent) loaderPercent.innerText = `${percent}%`;
-      if (loadedCount >= 12 || (bitmaps[0] && bitmaps[4])) {
+      if (loadedCount >= 10 || (bitmaps[0] && bitmaps[4])) {
         finishLoading();
       }
     }
@@ -170,17 +170,17 @@
 
   function preloadFrames() {
     // 1. Critical hero frames first
-    for (let i = 0; i < Math.min(12, TOTAL_FRAMES); i++) {
+    for (let i = 0; i < Math.min(16, TOTAL_FRAMES); i++) {
       queueFrame(i, true);
     }
 
     // 2. Uniform keyframes across whole video
-    for (let i = 12; i < TOTAL_FRAMES; i += 4) {
+    for (let i = 16; i < TOTAL_FRAMES; i += 3) {
       queueFrame(i, false);
     }
 
     // 3. Fallback loader dismiss
-    setTimeout(finishLoading, 1200);
+    setTimeout(finishLoading, 1000);
 
     // 4. Fill in remaining frames steadily in background
     setTimeout(() => {
@@ -189,12 +189,12 @@
           queueFrame(i, false);
         }
       }
-    }, 400);
+    }, 300);
   }
 
   // Prioritize streaming around user's active viewport position
   function streamNearFrames(centerIdx) {
-    const WINDOW_RADIUS = 12;
+    const WINDOW_RADIUS = 16;
     const start = Math.max(0, centerIdx - WINDOW_RADIUS);
     const end = Math.min(TOTAL_FRAMES - 1, centerIdx + WINDOW_RADIUS);
     for (let i = start; i <= end; i++) {
@@ -207,7 +207,6 @@
   // Smooth Canvas Resizing without DPR memory bloat
   function resizeCanvas() {
     updateScrollMetrics();
-    // Clamp DPR to 1.5 to eliminate 4K-6K canvas fill-rate GPU bottlenecks
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     
     canvas.width = Math.round(cachedWinW * dpr);
@@ -258,8 +257,46 @@
     needsRedraw = false;
   }
 
-  // Ultra-fast zero-reflow scroll handler
-  function updateScrollTarget() {
+  // Lenis Virtual Momentum Smooth Scrolling
+  let lenis = null;
+  const hasLenis = typeof window.Lenis === 'function';
+
+  if (hasLenis) {
+    lenis = new window.Lenis({
+      duration: 1.15,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.5,
+      infinite: false,
+    });
+
+    lenis.on('scroll', (e) => {
+      targetScrollProgress = Math.min(1, Math.max(0, e.progress));
+      const estimatedFrame = Math.round(targetScrollProgress * (TOTAL_FRAMES - 1));
+      streamNearFrames(estimatedFrame);
+
+      if (scrollHint) {
+        if (e.animatedScroll > 50) {
+          scrollHint.style.opacity = '0';
+        } else {
+          scrollHint.style.opacity = '0.8';
+        }
+      }
+    });
+
+    function lenisRafLoop(time) {
+      lenis.raf(time);
+      requestAnimationFrame(lenisRafLoop);
+    }
+    requestAnimationFrame(lenisRafLoop);
+  }
+
+  // Fallback native scroll handler if Lenis is not active
+  function updateScrollTargetNative() {
+    if (hasLenis) return;
     const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
     targetScrollProgress = Math.min(1, Math.max(0, scrollY / cachedMaxScroll));
     
@@ -275,20 +312,26 @@
     }
   }
 
-  // Responsive, fluid 60-120 FPS Animation Loop
+  // Silky 60-120 FPS Animation Loop (Unified with Lenis Momentum)
   function startAnimationLoop() {
     function loop() {
       const diff = targetScrollProgress - currentScrollProgress;
       const absDiff = Math.abs(diff);
 
-      if (absDiff > 0.00015) {
-        // Snappy responsive lerp tracking (tight, fluid, zero lag)
-        const lerpFactor = absDiff > 0.08 ? 0.38 : 0.28;
-        currentScrollProgress += diff * lerpFactor;
-        needsRedraw = true;
-      } else if (currentScrollProgress !== targetScrollProgress) {
+      if (hasLenis) {
+        // With Lenis, scroll is already momentum-interpolated at 60-120hz
         currentScrollProgress = targetScrollProgress;
         needsRedraw = true;
+      } else {
+        // Fallback exponential lerp for non-Lenis browsers
+        if (absDiff > 0.00015) {
+          const lerpFactor = absDiff > 0.08 ? 0.38 : 0.28;
+          currentScrollProgress += diff * lerpFactor;
+          needsRedraw = true;
+        } else if (currentScrollProgress !== targetScrollProgress) {
+          currentScrollProgress = targetScrollProgress;
+          needsRedraw = true;
+        }
       }
       
       const frameIdx = Math.min(
@@ -316,21 +359,22 @@
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       resizeCanvas();
-      updateScrollTarget();
+      if (lenis) lenis.resize();
+      if (!hasLenis) updateScrollTargetNative();
     }, 40);
   }
 
-  window.addEventListener('scroll', updateScrollTarget, { passive: true });
+  window.addEventListener('scroll', updateScrollTargetNative, { passive: true });
   window.addEventListener('resize', onWindowResize, { passive: true });
   window.addEventListener('orientationchange', onWindowResize, { passive: true });
-  window.addEventListener('touchstart', updateScrollTarget, { passive: true });
-  window.addEventListener('touchmove', updateScrollTarget, { passive: true });
+  window.addEventListener('touchstart', updateScrollTargetNative, { passive: true });
+  window.addEventListener('touchmove', updateScrollTargetNative, { passive: true });
   
   // Smooth scroll for internal anchor clicks
   document.addEventListener('DOMContentLoaded', () => {
     updateScrollMetrics();
     resizeCanvas();
-    updateScrollTarget();
+    if (!hasLenis) updateScrollTargetNative();
 
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
       anchor.addEventListener('click', function(e) {
@@ -339,7 +383,11 @@
           const targetEl = document.querySelector(hash);
           if (targetEl) {
             e.preventDefault();
-            targetEl.scrollIntoView({ behavior: 'smooth' });
+            if (lenis) {
+              lenis.scrollTo(targetEl, { duration: 1.2 });
+            } else {
+              targetEl.scrollIntoView({ behavior: 'smooth' });
+            }
           }
         }
       });
@@ -351,7 +399,7 @@
   resizeCanvas();
   preloadFrames();
   startAnimationLoop();
-  updateScrollTarget();
+  if (!hasLenis) updateScrollTargetNative();
 
   // Interactive Logo Badge Controller
   const badge = document.getElementById('round-code-badge');
