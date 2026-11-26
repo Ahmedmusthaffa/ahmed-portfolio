@@ -610,6 +610,8 @@
     const tabBtns = termsModal.querySelectorAll('.terms-tab-btn');
     const tabPanes = termsModal.querySelectorAll('.terms-tab-pane');
 
+    const modalBody = termsModal.querySelector('.terms-modal-body');
+
     const switchTermsTab = (tabName) => {
       const targetTab = tabName || 'terms';
       tabBtns.forEach(btn => {
@@ -620,6 +622,9 @@
         const isMatch = pane.id === `pane-${targetTab}`;
         pane.classList.toggle('active', isMatch);
       });
+      if (modalBody) {
+        modalBody.scrollTop = 0;
+      }
     };
 
     const openTermsModal = (tabName) => {
@@ -627,13 +632,28 @@
       termsModal.classList.add('open');
       termsModal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
+      if (typeof lenis !== 'undefined' && lenis && typeof lenis.stop === 'function') {
+        lenis.stop();
+      }
     };
 
     const closeTermsModal = () => {
       termsModal.classList.remove('open');
       termsModal.setAttribute('aria-hidden', 'true');
       document.body.style.overflow = '';
+      if (typeof lenis !== 'undefined' && lenis && typeof lenis.start === 'function') {
+        lenis.start();
+      }
     };
+
+    if (modalBody) {
+      modalBody.addEventListener('wheel', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+      modalBody.addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+      }, { passive: true });
+    }
 
     // Attach to all triggers across navigation, footer cards, and buttons
     document.querySelectorAll('.terms-modal-trigger').forEach(trigger => {

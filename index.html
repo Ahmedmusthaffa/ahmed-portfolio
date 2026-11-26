@@ -735,9 +735,9 @@
   </div>
 
   <!-- Portfolio Terms & Conditions Modal Window -->
-  <div id="terms-modal" class="terms-modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="terms-modal-title">
+  <div id="terms-modal" class="terms-modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="terms-modal-title" data-lenis-prevent>
     <div class="terms-modal-backdrop"></div>
-    <div class="terms-modal-window">
+    <div class="terms-modal-window" data-lenis-prevent>
       <div class="terms-modal-header">
         <div class="terms-modal-title-group">
           <div class="terms-modal-subheading">
@@ -766,7 +766,7 @@
         </button>
       </div>
 
-      <div class="terms-modal-body">
+      <div class="terms-modal-body" data-lenis-prevent>
         <!-- Tab 1: Terms of Service -->
         <div class="terms-tab-pane active" id="pane-terms">
           <h4>1. Acceptance of Terms</h4>
@@ -858,6 +858,6 @@
   </nav>
 
   <script src="lenis.min.js"></script>
-  <script src="script.js?v=5.7"></script>
+  <script src="script.js?v=5.8"></script>
 </body>
 </html>
