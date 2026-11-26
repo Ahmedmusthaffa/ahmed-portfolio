@@ -229,23 +229,16 @@ test('10: Security Headers (CSP, HSTS, Permissions-Policy)', async () => {
   await new Promise(resolve => server.close(resolve));
 });
 
-test('11: Legal & Terms Compliance Infrastructure', async () => {
+test('11: Footer Finality & Clean Boundary', async () => {
   const fs = require('fs');
   const path = require('path');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  // Verify markup components exist
-  assert.ok(html.includes('launch-terms-container'), 'Terms container must be present in footer');
-  assert.ok(html.includes('id="terms-modal"'), 'Terms modal must exist in DOM');
-  assert.ok(html.includes('terms-modal-trigger'), 'Interactive modal triggers must be present');
-  assert.ok(html.includes('pane-terms'), 'Terms pane must exist');
-  assert.ok(html.includes('pane-privacy'), 'Privacy pane must exist');
-  assert.ok(html.includes('pane-license'), 'License & IP pane must exist');
-  assert.ok(html.includes('pane-security'), 'Security pane must exist');
+  // Verify copyright is the absolute final section in the footer
+  assert.ok(html.includes('Copyright © 2026 Ahmed — All Right Reserved'), 'Copyright text must be present');
+  assert.ok(html.includes('Created by Ahmed'), 'Created by Ahmed must be present');
 
-  // Verify key governance clauses
-  assert.ok(html.includes('Acceptance of Terms'), 'Acceptance clause must be specified');
-  assert.ok(html.includes('Zero-Tracker Commitment'), 'Zero-tracker privacy policy must be present');
-  assert.ok(html.includes('MIT/Apache 2.0'), 'Open-source licensing terms must be stated');
-  assert.ok(html.includes('Defense-in-Depth Architecture'), 'Security controls must be documented');
+  // Verify terms container is cleanly removed as requested
+  assert.strictEqual(html.includes('launch-terms-container'), false, 'Terms container must not be present');
+  assert.strictEqual(html.includes('id="terms-modal"'), false, 'Terms modal must not be present');
 });
