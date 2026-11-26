@@ -1,0 +1,14 @@
+# Robots.txt for Ahmed Musthaffa Portfolio
+User-agent: *
+Allow: /
+Allow: /sitemap.xml
+Allow: /Ahmed_Musthaffa_FullStack_Resume.pdf
+Allow: /Ahmed_Musthaffa_AI_Engineer_Resume.pdf
+Allow: /Ahmed_Musthaffa_Resume.pdf
+
+# Disallow internal backend APIs from search engine crawler spam
+Disallow: /api/
+Disallow: /tests/
+
+# XML Sitemap Location for Google Search Console & Bing Webmaster
+Sitemap: https://ahmed-portfolio-kohl.vercel.app/sitemap.xml

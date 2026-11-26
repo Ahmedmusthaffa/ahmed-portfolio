@@ -137,6 +137,16 @@ test('7: Enterprise Security Gate - Static File Shield & Sensitive Data Exposure
   await allowedRes.text();
   assert.strictEqual(allowedRes.status, 200, 'Public index.html should be accessible');
 
+  const sitemapRes = await fetch(`http://localhost:${port}/sitemap.xml`);
+  const sitemapText = await sitemapRes.text();
+  assert.strictEqual(sitemapRes.status, 200, 'sitemap.xml should be accessible');
+  assert.ok(sitemapText.includes('https://ahmed-portfolio-kohl.vercel.app/'), 'sitemap.xml should contain portfolio url');
+
+  const robotsRes = await fetch(`http://localhost:${port}/robots.txt`);
+  const robotsText = await robotsRes.text();
+  assert.strictEqual(robotsRes.status, 200, 'robots.txt should be accessible');
+  assert.ok(robotsText.includes('Sitemap:'), 'robots.txt should declare Sitemap location');
+
   await new Promise(resolve => server.close(resolve));
 });
 
