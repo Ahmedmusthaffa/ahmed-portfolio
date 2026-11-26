@@ -63,7 +63,7 @@ function createProductionServer() {
       if (handleAnalyticsRoutes(req, res)) return;
     }
 
-    // 5. Static File Serving with Security Sandbox
+    // 5. Static File Serving with Enterprise Security Sandbox
     try {
       let rawPath = req.url.split('?')[0];
       let reqUrl = decodeURIComponent(rawPath).replace(/^\/+/, '');
@@ -77,6 +77,28 @@ function createProductionServer() {
         return res.end('403 Forbidden');
       }
 
+      // Security Sandbox: Strictly block internal files, configs, databases, and server scripts
+      const lowerUrl = reqUrl.toLowerCase();
+      const isSensitiveOrBlocked = 
+        lowerUrl.startsWith('.') || 
+        /(^|\/)\./.test(lowerUrl) ||
+        lowerUrl.endsWith('.json') ||
+        lowerUrl.includes('.env') ||
+        lowerUrl.endsWith('.py') ||
+        lowerUrl.endsWith('.yml') ||
+        lowerUrl.endsWith('.yaml') ||
+        lowerUrl.endsWith('.md') ||
+        lowerUrl === 'dockerfile' ||
+        lowerUrl.startsWith('backend/') ||
+        lowerUrl.startsWith('api/') ||
+        lowerUrl.startsWith('tests/') ||
+        lowerUrl === 'server.js';
+
+      if (isSensitiveOrBlocked) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: 'Access Denied: Protected Asset' }));
+      }
+
       if (!fs.existsSync(filePath)) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         return res.end('404 Not Found');
@@ -85,7 +107,7 @@ function createProductionServer() {
       const stats = fs.statSync(filePath);
       if (!stats.isFile()) {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.tend('404 Not Found');
+        return res.end('404 Not Found');
       }
 
       const ext = path.extname(filePath).toLowerCase();

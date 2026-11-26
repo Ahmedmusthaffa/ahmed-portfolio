@@ -102,3 +102,119 @@ test('6: Actionable Contact API & Honeypot Bot Trap', async () => {
 
   await new Promise(resolve => server.close(resolve));
 });
+
+test('7: Enterprise Security Gate - Static File Shield & Sensitive Data Exposure Defense', async () => {
+  const server = createProductionServer();
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+
+  // Blocked sensitive files
+  const blockedFiles = [
+    'contact_submissions.json',
+    'analytics_data.json',
+    '.env',
+    '.env.example',
+    'package.json',
+    'package-lock.json',
+    'server.js',
+    'backend/server.js',
+    'backend/config/env.js',
+    'Dockerfile',
+    '.gitignore'
+  ];
+
+  for (const file of blockedFiles) {
+    const res = await fetch(`http://localhost:${port}/${file}`);
+    await res.text();
+    assert.ok(
+      res.status === 403 || res.status === 404,
+      `Access to sensitive file '${file}' must be blocked (Got HTTP ${res.status})`
+    );
+  }
+
+  // Allowed public assets
+  const allowedRes = await fetch(`http://localhost:${port}/index.html`);
+  await allowedRes.text();
+  assert.strictEqual(allowedRes.status, 200, 'Public index.html should be accessible');
+
+  await new Promise(resolve => server.close(resolve));
+});
+
+test('8: DoS Prevention - Request Body Size Limit (Max 100KB)', async () => {
+  const server = createProductionServer();
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+
+  // Large 200KB payload
+  const oversizedPayload = {
+    firstName: 'Attacker',
+    email: 'attacker@example.com',
+    description: 'A'.repeat(200 * 1024)
+  };
+
+  const res = await fetch(`http://localhost:${port}/api/contact`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(oversizedPayload)
+  });
+  await res.text();
+
+  assert.strictEqual(res.status, 413, 'Oversized payload must be rejected with 413 Payload Too Large');
+
+  await new Promise(resolve => server.close(resolve));
+});
+
+test('9: Timing-Safe Admin Authentication & Query Param Secret Rejection', async () => {
+  const server = createProductionServer();
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+  const config = require('../backend/config/env');
+
+  // 1. Unauthenticated request -> 401
+  const unauthRes = await fetch(`http://localhost:${port}/api/contact/submissions`);
+  await unauthRes.text();
+  assert.strictEqual(unauthRes.status, 401, 'Unauthenticated access must be rejected');
+
+  // 2. Query parameter secret attempt (?secret=...) -> MUST BE REJECTED (401)
+  const querySecretRes = await fetch(`http://localhost:${port}/api/contact/submissions?secret=${config.adminSecret}`);
+  await querySecretRes.text();
+  assert.strictEqual(querySecretRes.status, 401, 'Query parameter secrets must be rejected to prevent log leaks');
+
+  // 3. Invalid Bearer Token -> 401
+  const invalidTokenRes = await fetch(`http://localhost:${port}/api/contact/submissions`, {
+    headers: { 'Authorization': 'Bearer wrong-secret-token' }
+  });
+  await invalidTokenRes.text();
+  assert.strictEqual(invalidTokenRes.status, 401, 'Invalid Bearer token must be rejected');
+
+  // 4. Valid Bearer Token -> 200
+  const validTokenRes = await fetch(`http://localhost:${port}/api/contact/submissions`, {
+    headers: { 'Authorization': `Bearer ${config.adminSecret}` }
+  });
+  await validTokenRes.text();
+  assert.strictEqual(validTokenRes.status, 200, 'Valid Bearer token must succeed');
+
+  await new Promise(resolve => server.close(resolve));
+});
+
+test('10: Security Headers (CSP, HSTS, Permissions-Policy)', async () => {
+  const server = createProductionServer();
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+
+  const res = await fetch(`http://localhost:${port}/index.html`);
+  const csp = res.headers.get('content-security-policy');
+  const hsts = res.headers.get('strict-transport-security');
+  const xcto = res.headers.get('x-content-type-options');
+  const xfo = res.headers.get('x-frame-options');
+  const perm = res.headers.get('permissions-policy');
+  await res.text();
+
+  assert.ok(csp, 'Content-Security-Policy header must be present');
+  assert.strictEqual(xcto, 'nosniff');
+  assert.strictEqual(xfo, 'DENY');
+  assert.ok(hsts, 'HSTS header must be present');
+  assert.ok(perm, 'Permissions-Policy header must be present');
+
+  await new Promise(resolve => server.close(resolve));
+});

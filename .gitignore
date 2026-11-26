@@ -1,4 +1,9 @@
 node_modules/
 .env
+.env.*
 backups/
+contact_submissions.json
+analytics_data.json
+*.json.tmp*
+*.log
 .DS_Store

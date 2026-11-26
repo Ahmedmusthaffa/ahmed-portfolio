@@ -18,12 +18,8 @@ function handleContactRoutes(req, res, clientIp) {
       }));
     }
 
-    let body = '';
-    req.on('data', chunk => { body += chunk.toString(); });
-    req.on('end', async () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-
+    security.readJsonBody(req)
+      .then(async (payload) => {
         if (payload._gotcha || payload.website) {
           console.warn('💖 [BOT TRDEP] Blocked honeypot bot submission');
           res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -32,13 +28,13 @@ function handleContactRoutes(req, res, clientIp) {
 
         const firstName = security.sanitizeInput(payload.firstName);
         const lastName = security.sanitizeInput(payload.lastName);
-        const email = security.sanitizeInput(payload.email);
+        const email = (payload.email || '').trim().toLowerCase();
         const phone = security.sanitizeInput(payload.phone);
         const description = security.sanitizeInput(payload.description);
 
-        if (!firstName || firstName.length < 2) {
+        if (!firstName || firstName.length < 2 || firstName.length > 60) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ success: false, error: 'Please provide a valid first name.' }));
+          return res.end(JSON.stringify({ success: false, error: 'Please provide a valid first name (2-60 characters).' }));
         }
 
         if (!security.validateEmail(email)) {
@@ -46,9 +42,9 @@ function handleContactRoutes(req, res, clientIp) {
           return res.end(JSON.stringify({ success: false, error: 'Please provide a valid email address.' }));
         }
 
-        if (!description || description.length < 5) {
+        if (!description || description.length < 5 || description.length > 5000) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ success: false, error: 'Please provide a project description (min 5 chars).' }));
+          return res.end(JSON.stringify({ success: false, error: 'Please provide a project description (5-5000 chars).' }));
         }
 
         const submission = db.saveSubmission({
@@ -74,20 +70,29 @@ function handleContactRoutes(req, res, clientIp) {
           message: 'Thank you! Your message has been sent directly to Ahmed.',
           id: submission.id
         }));
+      })
+      .catch((err) => {
+        const status = err.statusCode || 400;
+        res.writeHead(status, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: err.message || 'Invalid payload' }));
+      });
 
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ success: false, error: 'Invalid JSON format' }));
-      }
-    });
     return true;
   }
 
   if (req.method === 'GET' && req.url.startsWith('/api/contact/submissions')) {
+    // Disallow query parameter authentication (?secret=...) as query strings leak into web server logs & history
+    if (req.url.includes('?') && req.url.includes('secret=')) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: 'Query parameter authentication forbidden. Use Bearer header.' }));
+    }
+
     const authHeader = req.headers['authorization'] || '';
-    const secretKey = req.url.includes('secret=') ? req.url.split('secret=')[1].split('&')[0] : '';
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    const providedToken = match ? match[1].trim() : '';
     
-    if (authHeader !== 'Bearer ' + config.adminSecret && secretKey !== config.adminSecret) {
+    // Constant-time timing-safe comparison against configured adminSecret
+    if (!providedToken || !config.adminSecret || !security.timingSafeCompare(providedToken, config.adminSecret)) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ success: false, error: 'Unauthorized access' }));
     }

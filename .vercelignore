@@ -1,0 +1,9 @@
+.env*
+*.json
+*.log
+*.py
+*.yaml
+*.yml
+Dockerfile
+tests/
+backups/
