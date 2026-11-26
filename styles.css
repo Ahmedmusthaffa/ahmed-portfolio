@@ -123,6 +123,7 @@ body {
   transform: translate3d(0, 0, 0);
   will-change: transform;
   backface-visibility: hidden;
+  contain: strict;
 }
 
 .canvas-overlay-glow {
@@ -1516,23 +1517,24 @@ body {
   .hero-mobile-actions {
     display: flex !important;
     gap: 0.75rem !important;
-    margin-top: 1.4rem !important;
+    margin-top: 1.3rem !important;
     flex-wrap: wrap !important;
     width: 100% !important;
+    justify-content: flex-start !important;
   }
   .hero-mobile-btn-primary {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 0.5rem !important;
-    flex: 1 1 auto !important;
+    flex: 0 0 auto !important;
     min-width: 135px !important;
     min-height: 46px !important;
     background: #ccff00 !important;
     color: #000000 !important;
     font-weight: 700 !important;
     font-size: 0.88rem !important;
-    padding: 0.7rem 1.2rem !important;
+    padding: 0.7rem 1.25rem !important;
     border-radius: 9999px !important;
     text-decoration: none !important;
     box-shadow: 0 4px 16px rgba(204, 255, 0, 0.35) !important;
@@ -1543,14 +1545,14 @@ body {
     align-items: center !important;
     justify-content: center !important;
     gap: 0.5rem !important;
-    flex: 1 1 auto !important;
+    flex: 0 0 auto !important;
     min-width: 125px !important;
     min-height: 46px !important;
     background: rgba(255, 255, 255, 0.08) !important;
     color: #ffffff !important;
     font-weight: 600 !important;
     font-size: 0.88rem !important;
-    padding: 0.7rem 1.2rem !important;
+    padding: 0.7rem 1.25rem !important;
     border-radius: 9999px !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
     text-decoration: none !important;
@@ -1558,10 +1560,11 @@ body {
     transition: transform 0.2s ease !important;
   }
   .services-row {
-    grid-template-columns: 1fr !important;
-    gap: 1.4rem !important;
-    margin-top: 2rem !important;
-    padding: 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1.25rem !important;
+    margin-top: 1.5rem !important;
+    padding: 1.4rem !important;
     background: rgba(10, 15, 26, 0.78) !important;
     backdrop-filter: blur(20px) !important;
     -webkit-backdrop-filter: blur(20px) !important;
@@ -1570,7 +1573,29 @@ body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
   }
   .service-item {
-    gap: 0.45rem !important;
+    display: grid !important;
+    grid-template-columns: 36px 1fr !important;
+    align-items: flex-start !important;
+    gap: 0.2rem 0.85rem !important;
+    text-align: left !important;
+  }
+  .service-icon-wrap {
+    grid-row: 1 / span 2;
+    margin-top: 2px;
+  }
+  .service-name {
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.04em !important;
+    text-align: left !important;
+  }
+  .service-desc {
+    font-size: 0.82rem !important;
+    line-height: 1.45 !important;
+    color: rgba(255, 255, 255, 0.72) !important;
+    margin: 0 !important;
+    text-align: left !important;
   }
   .who-am-i-layout {
     grid-template-columns: 1fr !important;
@@ -1583,17 +1608,47 @@ body {
     padding: 1.8rem 1.4rem !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
   }
+  .who-left-col {
+    align-items: flex-start !important;
+    text-align: left !important;
+    padding-left: 0 !important;
+    width: 100% !important;
+  }
+  .who-tag, .who-am-i-title {
+    text-align: left !important;
+    width: 100% !important;
+  }
   .who-identity-block {
     width: 100% !important;
-    align-items: center !important;
-    text-align: center !important;
+    align-items: flex-start !important;
+    text-align: left !important;
     margin-bottom: 1.5rem !important;
+  }
+  .who-am-i-name {
+    text-align: left !important;
+    margin-bottom: 0.8rem !important;
+  }
+  .who-highlights-list {
+    align-items: flex-start !important;
+    text-align: left !important;
+    width: 100% !important;
+  }
+  .who-social-buttons {
+    justify-content: flex-start !important;
+    width: 100% !important;
   }
   .who-story-card {
     padding-left: 0 !important;
     line-height: 1.65 !important;
     font-size: 0.95rem !important;
     color: rgba(255, 255, 255, 0.88) !important;
+    text-align: left !important;
+  }
+  .showcase-col-header, .what-header {
+    text-align: left !important;
+  }
+  .showcase-tag, .what-tag, .skills-block-title, .what-title {
+    text-align: left !important;
   }
   .skills-tools-split-container {
     grid-template-columns: 1fr !important;

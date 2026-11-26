@@ -85,7 +85,7 @@
   // Paced Loading Queue (Prevents network & main thread congestion)
   const loadQueue = [];
   let activeLoads = 0;
-  const MAX_CONCURRENT_LOADS = 8;
+  const MAX_CONCURRENT_LOADS = 4; // Optimized concurrency to avoid network pipeline choking
 
   function processQueue() {
     while (activeLoads < MAX_CONCURRENT_LOADS && loadQueue.length > 0) {
@@ -263,13 +263,14 @@
 
   if (hasLenis) {
     lenis = new window.Lenis({
-      duration: 1.15,
+      duration: 1.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 1.0,
-      touchMultiplier: 1.5,
+      touchMultiplier: 1.0,
+      syncTouch: true,
       infinite: false,
     });
 
@@ -286,12 +287,6 @@
         }
       }
     });
-
-    function lenisRafLoop(time) {
-      lenis.raf(time);
-      requestAnimationFrame(lenisRafLoop);
-    }
-    requestAnimationFrame(lenisRafLoop);
   }
 
   // Fallback native scroll handler if Lenis is not active
@@ -312,40 +307,34 @@
     }
   }
 
-  // Silky 60-120 FPS Animation Loop (Unified with Lenis Momentum)
+  // Silky 60-120 FPS Unified Single-RAF Animation Loop
   function startAnimationLoop() {
-    function loop() {
-      const diff = targetScrollProgress - currentScrollProgress;
-      const absDiff = Math.abs(diff);
-
-      if (hasLenis) {
-        // With Lenis, scroll is already momentum-interpolated at 60-120hz
+    function loop(time) {
+      // 1. Advance Lenis physics if active
+      if (lenis) {
+        lenis.raf(time);
         currentScrollProgress = targetScrollProgress;
-        needsRedraw = true;
       } else {
-        // Fallback exponential lerp for non-Lenis browsers
-        if (absDiff > 0.00015) {
-          const lerpFactor = absDiff > 0.08 ? 0.38 : 0.28;
-          currentScrollProgress += diff * lerpFactor;
-          needsRedraw = true;
-        } else if (currentScrollProgress !== targetScrollProgress) {
+        // Fallback smooth interpolation for non-Lenis browsers
+        const diff = targetScrollProgress - currentScrollProgress;
+        if (Math.abs(diff) > 0.0001) {
+          currentScrollProgress += diff * 0.28;
+        } else {
           currentScrollProgress = targetScrollProgress;
-          needsRedraw = true;
         }
       }
       
+      // 2. Compute exact target frame from current progress
       const frameIdx = Math.min(
         TOTAL_FRAMES - 1,
         Math.max(0, Math.round(currentScrollProgress * (TOTAL_FRAMES - 1)))
       );
       
-      if (frameIdx !== currentFrameIndex) {
+      // 3. Only trigger canvas redraw when the frame actually changes or on explicit redraw request
+      if (frameIdx !== currentFrameIndex || needsRedraw) {
         currentFrameIndex = frameIdx;
-        needsRedraw = true;
-      }
-
-      if (needsRedraw) {
         renderFrame(currentFrameIndex);
+        needsRedraw = false;
       }
       
       requestAnimationFrame(loop);
