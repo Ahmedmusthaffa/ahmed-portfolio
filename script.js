@@ -392,6 +392,42 @@
         }
       });
     });
+
+    // Active navigation state for Mobile Bottom Dock
+    const dockItems = document.querySelectorAll('.mobile-bottom-dock .dock-item');
+    const trackedSections = [
+      { id: 'home', el: document.getElementById('home') },
+      { id: 'about', el: document.getElementById('about') },
+      { id: 'skills', el: document.getElementById('skills') },
+      { id: 'projects', el: document.getElementById('projects') },
+      { id: 'contact', el: document.getElementById('contact') }
+    ].filter(s => s.el !== null);
+
+    function updateActiveDock() {
+      if (!dockItems.length || !trackedSections.length) return;
+      const scrollY = window.scrollY || window.pageYOffset;
+      const offset = window.innerHeight * 0.35;
+      let currentSectionId = trackedSections[0].id;
+
+      for (let i = 0; i < trackedSections.length; i++) {
+        const top = trackedSections[i].el.offsetTop - offset;
+        if (scrollY >= top) {
+          currentSectionId = trackedSections[i].id;
+        }
+      }
+
+      dockItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (href === '#' + currentSectionId) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveDock, { passive: true });
+    updateActiveDock();
   });
 
   // Initialize

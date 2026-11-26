@@ -1434,6 +1434,15 @@ body {
   color: #000000;
   transform: translateY(-2px);
 }
+
+/* Mobile-only elements (hidden by default on Laptop & Desktop) */
+.mobile-bottom-dock {
+  display: none;
+}
+.hero-mobile-actions {
+  display: none;
+}
+
 @media (max-width: 1024px) {
   .hero-top-grid, .about-grid {
     grid-template-columns: 1fr;
@@ -1472,8 +1481,9 @@ body {
 
 @media (max-width: 768px) {
   .content-wrapper {
-    padding: 1rem 1.25rem 4rem 1.25rem !important;
+    padding: 1rem 1.25rem 6.5rem 1.25rem !important;
     width: 100% !important;
+    overflow-x: hidden !important;
   }
   .navbar {
     margin-bottom: 2rem !important;
@@ -1482,27 +1492,96 @@ body {
   .nav-brand {
     font-size: 1.35rem !important;
   }
+  .hero-section {
+    margin-bottom: 3.5rem !important;
+  }
   .hero-title-area {
-    padding-top: 1.5rem !important;
-    padding-left: 0 !important;
+    padding: 1.8rem 1.4rem !important;
     width: 100% !important;
+    background: rgba(10, 15, 26, 0.8) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 22px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65) !important;
   }
   .hero-subtitle {
     font-size: 1.05rem !important;
-    margin-bottom: 0.4rem !important;
+    margin-bottom: 0.35rem !important;
   }
   .hero-main-heading {
-    font-size: clamp(2.8rem, 11.5vw, 4.2rem) !important;
-    line-height: 1.04 !important;
+    font-size: clamp(2.3rem, 10vw, 3.2rem) !important;
+    line-height: 1.08 !important;
+  }
+  .hero-mobile-actions {
+    display: flex !important;
+    gap: 0.75rem !important;
+    margin-top: 1.4rem !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+  }
+  .hero-mobile-btn-primary {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    flex: 1 1 auto !important;
+    min-width: 135px !important;
+    min-height: 46px !important;
+    background: #ccff00 !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+    font-size: 0.88rem !important;
+    padding: 0.7rem 1.2rem !important;
+    border-radius: 9999px !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 16px rgba(204, 255, 0, 0.35) !important;
+    transition: transform 0.2s ease !important;
+  }
+  .hero-mobile-btn-secondary {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    flex: 1 1 auto !important;
+    min-width: 125px !important;
+    min-height: 46px !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    font-size: 0.88rem !important;
+    padding: 0.7rem 1.2rem !important;
+    border-radius: 9999px !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    text-decoration: none !important;
+    backdrop-filter: blur(10px) !important;
+    transition: transform 0.2s ease !important;
   }
   .services-row {
     grid-template-columns: 1fr !important;
-    gap: 1.8rem !important;
-    margin-top: 3.5rem !important;
-    padding-top: 1.5rem !important;
+    gap: 1.4rem !important;
+    margin-top: 2rem !important;
+    padding: 1.5rem !important;
+    background: rgba(10, 15, 26, 0.78) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
   }
   .service-item {
     gap: 0.45rem !important;
+  }
+  .who-am-i-layout {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+    background: rgba(10, 15, 26, 0.78) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    padding: 1.8rem 1.4rem !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
   }
   .who-identity-block {
     width: 100% !important;
@@ -1512,14 +1591,43 @@ body {
   }
   .who-story-card {
     padding-left: 0 !important;
+    line-height: 1.65 !important;
+    font-size: 0.95rem !important;
+    color: rgba(255, 255, 255, 0.88) !important;
   }
   .skills-tools-split-container {
     grid-template-columns: 1fr !important;
-    gap: 2.5rem !important;
+    gap: 2.2rem !important;
+    background: rgba(10, 15, 26, 0.78) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    padding: 1.8rem 1.4rem !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
   }
   .skills-visual-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1.4rem 0.5rem !important;
+    justify-items: center !important;
+    width: 100% !important;
+  }
+  .what-grid {
     grid-template-columns: 1fr !important;
-    gap: 1.2rem !important;
+    gap: 1.25rem !important;
+  }
+  .what-card {
+    padding: 1.5rem !important;
+    background: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  }
+  .projects-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
   }
   .project-feature-card {
     padding: 1.5rem !important;
@@ -1563,17 +1671,60 @@ body {
   .bottom-left, .bottom-right {
     justify-content: center !important;
   }
+  /* Floating Bottom Dock Navigation for Mobile */
+  .mobile-bottom-dock {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 14px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 9999 !important;
+    background: rgba(15, 23, 42, 0.92) !important;
+    backdrop-filter: blur(24px) !important;
+    -webkit-backdrop-filter: blur(24px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    border-radius: 9999px !important;
+    padding: 5px 12px !important;
+    gap: 8px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.3) !important;
+    max-width: 94vw !important;
+  }
+  .dock-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    color: rgba(255, 255, 255, 0.65) !important;
+    text-decoration: none !important;
+    font-size: 0.66rem !important;
+    font-weight: 600 !important;
+    padding: 5px 8px !important;
+    border-radius: 12px !important;
+    transition: all 0.2s ease !important;
+    min-width: 48px !important;
+    min-height: 44px !important;
+  }
+  .dock-item:hover, .dock-item.active {
+    color: #ccff00 !important;
+  }
+  .dock-item svg {
+    transition: transform 0.2s ease !important;
+  }
+  .dock-item:hover svg, .dock-item.active svg {
+    transform: scale(1.15) !important;
+  }
 }
 
 @media (max-width: 480px) {
   .content-wrapper {
-    padding: 0.85rem 1rem 3.5rem 1rem !important;
+    padding: 0.85rem 1rem 6.5rem 1rem !important;
   }
   .hero-main-heading {
-    font-size: clamp(2.4rem, 13vw, 3.4rem) !important;
+    font-size: clamp(2.2rem, 11vw, 2.8rem) !important;
   }
   .who-name-heading {
-    font-size: clamp(2rem, 10vw, 3rem) !important;
+    font-size: clamp(1.8rem, 9vw, 2.6rem) !important;
   }
   .skills-category-title, .tools-category-title {
     font-size: 1.15rem !important;
@@ -1584,5 +1735,10 @@ body {
   .launch-nav-columns {
     grid-template-columns: 1fr !important;
     gap: 1.8rem !important;
+  }
+  .dock-item {
+    padding: 4px 6px !important;
+    min-width: 42px !important;
+    font-size: 0.62rem !important;
   }
 }
