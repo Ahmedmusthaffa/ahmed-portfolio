@@ -589,6 +589,15 @@
                 <li><a href="#home">Cloud & DevOps</a></li>
               </ul>
             </div>
+            <div class="nav-col">
+              <span class="col-title">// Legal &amp; Compliance</span>
+              <ul class="col-links">
+                <li><a href="javascript:void(0)" class="terms-modal-trigger" data-tab="terms">Terms of Service</a></li>
+                <li><a href="javascript:void(0)" class="terms-modal-trigger" data-tab="privacy">Privacy &amp; Data Policy</a></li>
+                <li><a href="javascript:void(0)" class="terms-modal-trigger" data-tab="license">Code Licensing &amp; IP</a></li>
+                <li><a href="javascript:void(0)" class="terms-modal-trigger" data-tab="security">Security &amp; SLA</a></li>
+              </ul>
+            </div>
           </div>
 
           <div class="launch-cv-action" style="margin-top: 5rem !important; display: flex !important; flex-wrap: wrap !important; gap: 12px !important; justify-content: flex-start !important;">
@@ -683,7 +692,145 @@
           </a>
         </div>
       </div>
+
+      <!-- Terms & Conditions Compliance Container -->
+      <div class="launch-terms-container">
+        <div class="terms-summary-card">
+          <div class="terms-summary-top">
+            <div class="terms-badge-group">
+              <span class="terms-status-badge">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                Legal &amp; Portfolio Terms
+              </span>
+              <span class="terms-compliance-tag">GDPR &amp; Fair-Use Compliant</span>
+            </div>
+            <span class="terms-updated-pill">Updated: 2026</span>
+          </div>
+
+          <p class="terms-summary-text">
+            This portfolio demonstrates engineering architecture, client deliverables, and AI agent systems. Source repositories are distributed under MIT/Apache 2.0 open-source licensing. Inquiries submitted via the contact portal are protected via end-to-end TLS encryption, strictly confidential, and never sold or shared.
+          </p>
+
+          <div class="terms-action-pills">
+            <button type="button" class="terms-pill-btn terms-modal-trigger" data-tab="terms">
+              <span>Terms of Service</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button type="button" class="terms-pill-btn terms-modal-trigger" data-tab="privacy">
+              <span>Privacy &amp; Data Policy</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button type="button" class="terms-pill-btn terms-modal-trigger" data-tab="license">
+              <span>IP &amp; Code Licensing</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+            <button type="button" class="terms-pill-btn terms-modal-trigger" data-tab="security">
+              <span>Security &amp; SLA</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
+  </div>
+
+  <!-- Portfolio Terms & Conditions Modal Window -->
+  <div id="terms-modal" class="terms-modal-overlay" aria-hidden="true" role="dialog" aria-labelledby="terms-modal-title">
+    <div class="terms-modal-backdrop"></div>
+    <div class="terms-modal-window">
+      <div class="terms-modal-header">
+        <div class="terms-modal-title-group">
+          <div class="terms-modal-subheading">
+            <span class="terms-modal-dot"></span>
+            <span>PORTFOLIO GOVERNANCE &amp; LEGAL NOTICE</span>
+          </div>
+          <h3 id="terms-modal-title" class="terms-modal-title">Ahmed M. — Portfolio Terms &amp; Policies</h3>
+        </div>
+        <button type="button" class="terms-modal-close-btn" id="terms-modal-close" aria-label="Close Terms Dialog">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="terms-modal-nav">
+        <button type="button" class="terms-tab-btn active" data-tab="terms">
+          <span>📜 Terms of Service</span>
+        </button>
+        <button type="button" class="terms-tab-btn" data-tab="privacy">
+          <span>🔒 Privacy &amp; Data</span>
+        </button>
+        <button type="button" class="terms-tab-btn" data-tab="license">
+          <span>⚖️ IP &amp; Licensing</span>
+        </button>
+        <button type="button" class="terms-tab-btn" data-tab="security">
+          <span>🛡️ Security &amp; SLA</span>
+        </button>
+      </div>
+
+      <div class="terms-modal-body">
+        <!-- Tab 1: Terms of Service -->
+        <div class="terms-tab-pane active" id="pane-terms">
+          <h4>1. Acceptance of Terms</h4>
+          <p>By accessing, browsing, or interacting with this portfolio website (<a href="https://ahmed-portfolio-kohl.vercel.app/" target="_blank" rel="noopener">ahmed-portfolio-kohl.vercel.app</a>), you agree to comply with and be bound by these Terms and Conditions. These terms govern all visitors, recruiters, prospective clients, and engineering collaborators.</p>
+
+          <h4>2. Permitted Use &amp; Intellectual Attribution</h4>
+          <p>This portfolio is provided for professional evaluation, recruitment assessment, technical demonstration, and consulting inquiries. You are welcome to view pages, examine architectural blueprints, and download official resume copies. Automated scraping, malicious probing, or unauthorized denial-of-service stress testing is strictly prohibited.</p>
+
+          <h4>3. Professional Services &amp; Engagements</h4>
+          <p>All descriptions of software engineering capabilities, architectural case studies, and agentic AI systems are presented to illustrate technical competency. Formal consulting or full-time engagements, deliverables, milestones, and non-disclosure agreements (NDAs) are executed via bilateral agreements prior to project commencement.</p>
+
+          <h4>4. Limitation of Liability</h4>
+          <p>Portfolio materials and live demonstrations are provided "as is" without warranty of any kind, express or implied. While every effort is made to maintain high availability and precision, Ahmed Musthaffa shall not be liable for any direct or indirect damages arising from the use of technical references on this site.</p>
+        </div>
+
+        <!-- Tab 2: Privacy Policy -->
+        <div class="terms-tab-pane" id="pane-privacy">
+          <h4>1. Zero-Tracker Commitment</h4>
+          <p>We believe in privacy by design. This website does <strong>not</strong> load invasive advertising pixels, third-party user fingerprinting tools, marketing trackers, or cross-domain behavioral spyware. Your browsing session remains private.</p>
+
+          <h4>2. Contact Information &amp; Storage</h4>
+          <p>When you submit a project request via the contact form, we collect the details you provide (First Name, Last Name, Email, Phone Number, and Project Scope). This data is transmitted using encrypted TLS/HTTPS connections and stored securely in an isolated administrative datastore strictly to respond to your inquiry.</p>
+
+          <h4>3. No Commercial Sale of Data</h4>
+          <p>Your contact information is <strong>never sold, leased, or distributed</strong> to marketing brokers or third-party advertisers. Processing strictly adheres to global privacy benchmarks including GDPR and CCPA core principles.</p>
+
+          <h4>4. Data Removal / Right to Erasure</h4>
+          <p>You may request the immediate deletion of any submitted contact inquiry at any time. Simply send an email to <a href="mailto:ahmedmusthaffa02@gmail.com">ahmedmusthaffa02@gmail.com</a> with the subject "Data Erasure Request" and your record will be securely purged within 48 hours.</p>
+        </div>
+
+        <!-- Tab 3: IP & Licensing -->
+        <div class="terms-tab-pane" id="pane-license">
+          <h4>1. Original Creative Work</h4>
+          <p>© 2026 Ahmed Musthaffa. All Rights Reserved. The custom visual UI, responsive glassmorphism layout, scroll-driven canvas sequence controller, and brand styling are protected intellectual properties.</p>
+
+          <h4>2. Open Source Code Licensing</h4>
+          <p>Open-source projects linked from this portfolio (such as DocuMind, OmniRoute Gateway connectors, and AI agent repositories) are hosted on GitHub under their respective open-source licenses, typically the permissive MIT License or Apache 2.0 License.</p>
+
+          <h4>3. Third-Party Trademarks</h4>
+          <p>All third-party brand marks, company trademarks, and institution names mentioned (such as Python, FastAPI, Docker, AWS, IIT Madras NPTEL, IEEE, and PMIST) remain the exclusive property of their respective trademark holders and are utilized strictly for nominative and academic attribution.</p>
+        </div>
+
+        <!-- Tab 4: Security & SLA -->
+        <div class="terms-tab-pane" id="pane-security">
+          <h4>1. Defense-in-Depth Architecture</h4>
+          <p>This application implements rigorous enterprise security controls:
+          <ul>
+            <li><strong>Content Security Policy (CSP):</strong> Hardened script, style, and frame directives preventing Cross-Site Scripting (XSS).</li>
+            <li><strong>Input Sanitization:</strong> Automated HTML entity encoding and prototype pollution filters on incoming payloads.</li>
+            <li><strong>Rate Limiting &amp; Bot Defense:</strong> In-memory sliding window rate-limiting and decoy honeypot trap fields preventing spam bots.</li>
+            <li><strong>Timing-Safe Secrets:</strong> Constant-time cryptographic comparison preventing side-channel token timing attacks.</li>
+          </ul>
+          </p>
+
+          <h4>2. Responsible Disclosure</h4>
+          <p>Security researchers and ethical developers who discover potential vulnerabilities are encouraged to disclose them responsibly by emailing <a href="mailto:ahmedmusthaffa02@gmail.com">ahmedmusthaffa02@gmail.com</a>. Legitimate reports will receive swift acknowledgment and remediation.</p>
+        </div>
+      </div>
+
+      <div class="terms-modal-footer">
+        <span class="terms-modal-status-text">⚡ Hardened with Defense-in-Depth • Zero Tracking • TLS 1.3</span>
+        <button type="button" class="terms-modal-ack-btn" id="terms-modal-ack">Understood &amp; Close</button>
+      </div>
+    </div>
   </div>
 
   <!-- Mobile Floating Quick-Action Dock (Only visible on Smartphones) -->
@@ -711,6 +858,6 @@
   </nav>
 
   <script src="lenis.min.js"></script>
-  <script src="script.js?v=5.6"></script>
+  <script src="script.js?v=5.7"></script>
 </body>
 </html>
