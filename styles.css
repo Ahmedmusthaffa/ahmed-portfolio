@@ -1660,7 +1660,13 @@ body {
   background: rgba(0, 0, 0, 0.35);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   overflow-x: auto;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.terms-modal-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .terms-tab-btn {
