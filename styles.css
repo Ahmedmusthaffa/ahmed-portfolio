@@ -1295,12 +1295,11 @@ body {
   padding: 0.95rem 1.4rem;
   background: #ffffff;
   color: #000000;
-  border: none;
+  border: 1.5px solid #ccff00;
   border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 700;
   cursor: pointer;
-  border-left: 4px solid #ccff00;
   transition: background-color 0.25s ease, transform 0.25s ease;
   margin-top: 0.4rem;
 }
