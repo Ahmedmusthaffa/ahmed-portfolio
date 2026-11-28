@@ -1,4 +1,5 @@
 (function() {
+  const pageLoadTime = Date.now();
   const FIRST_FRAME_INDEX = 24; // Trim initial 1 second (24 frames) to eliminate left-side shadow
   const LAST_FRAME_INDEX = 191;
   const TOTAL_FRAMES = (LAST_FRAME_INDEX - FIRST_FRAME_INDEX + 1); // 168 clean Studio HD frames (024 to 191)
@@ -528,12 +529,33 @@
     contactForm.addEventListener('submit', (e) => {
       e.preventDefault();
       
+      const elapsedMs = Date.now() - pageLoadTime;
+      const gotchaVal = document.getElementById('contact-gotcha')?.value.trim() || '';
+
+      // Anti-Spam Defense: Silent drop if honeypot filled or submitted < 2.5s after load
+      if (gotchaVal || elapsedMs < 2500) {
+        console.warn('Bot submission blocked');
+        if (successMsg) {
+          successMsg.style.display = 'block';
+          successMsg.innerHTML = `
+            <div style="background: rgba(204, 255, 0, 0.08); border: 1.5px solid #ccff00; padding: 1.2rem; border-radius: 10px; margin-top: 1.2rem; text-align: center;">
+              <p style="color: #ffffff; font-weight: 700; font-size: 1rem; margin-bottom: 0.4rem;">✓ Thank you!</p>
+              <p style="color: rgba(255, 255, 255, 0.75); font-size: 0.85rem;">Your message has been received.</p>
+            </div>
+          `;
+        }
+        contactForm.reset();
+        return;
+      }
+
       const payload = {
         firstName: document.getElementById('contact-first-name')?.value.trim() || '',
         lastName: document.getElementById('contact-last-name')?.value.trim() || '',
         email: document.getElementById('contact-email')?.value.trim() || '',
         phone: document.getElementById('contact-phone')?.value.trim() || '',
-        description: document.getElementById('contact-description')?.value.trim() || ''
+        description: document.getElementById('contact-description')?.value.trim() || '',
+        _gotcha: gotchaVal,
+        _timestamp: pageLoadTime
       };
 
       const clientName = `${payload.firstName} ${payload.lastName}`.trim() || 'Client';

@@ -21,8 +21,8 @@ const config = {
   smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
   smtpPort: parseInt(process.env.SMTP_PORT || '465', 10),
   resendApiKey: process.env.RESEND_API_KEY || '',
-  rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '10', 10),
-  rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
+  rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX || '3', 10),
+  rateLimitWindowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '600000', 10),
   maxBodyBytes: 100 * 1024, // 100KB DoS protection limit
   dbPath: path.resolve(storageBase, 'contact_submissions.json'),
   backupDir: path.resolve(storageBase, 'backups'),

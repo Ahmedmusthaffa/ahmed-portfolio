@@ -48,7 +48,7 @@ function applySecurityHeaders(res) {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
 
   // 7. Hardware & Permissions Policy
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
 
   // 8. CORS Headers (Restrictive)
   res.setHeader('Access-Control-Allow-Origin', '*');

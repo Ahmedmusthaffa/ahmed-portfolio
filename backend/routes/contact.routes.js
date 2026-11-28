@@ -6,6 +6,16 @@ const config = require('../config/env');
 
 function handleContactRoutes(req, res, clientIp) {
   if (req.method === 'POST' && req.url === '/api/contact') {
+    // 1. DoS Protection: Reject oversized payloads immediately before consuming rate limit
+    const contentLength = parseInt(req.headers['content-length'] || '0', 10);
+    if (contentLength > config.maxBodyBytes) {
+      res.writeHead(413, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ 
+        success: false, 
+        error: 'Payload Too Large: Maximum allowed size is 100KB' 
+      }));
+    }
+
     const rateCheck = security.checkRateLimit(clientIp);
     if (!rateCheck.allowed) {
       res.writeHead(429, { 
@@ -21,9 +31,19 @@ function handleContactRoutes(req, res, clientIp) {
     security.readJsonBody(req)
       .then(async (payload) => {
         if (payload._gotcha || payload.website) {
-          console.warn('💖 [BOT TRDEP] Blocked honeypot bot submission');
+          console.warn('💖 [BOT TRAP] Blocked honeypot bot submission');
           res.writeHead(200, { 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ success: true, message: 'Thank you!' }));
+        }
+
+        // Anti-Spam: Reject rapid automated submissions occurring < 2.5 seconds after page load
+        if (payload._timestamp && typeof payload._timestamp === 'number') {
+          const elapsed = Date.now() - payload._timestamp;
+          if (elapsed < 2500) {
+            console.warn(`💖 [BOT TRAP] Blocked rapid bot submission (${elapsed}ms < 2500ms)`);
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ success: true, message: 'Thank you!' }));
+          }
         }
 
         const firstName = security.sanitizeInput(payload.firstName);

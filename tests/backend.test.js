@@ -164,7 +164,10 @@ test('8: DoS Prevention - Request Body Size Limit (Max 100KB)', async () => {
 
   const res = await fetch(`http://localhost:${port}/api/contact`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Forwarded-For': '198.51.100.8'
+    },
     body: JSON.stringify(oversizedPayload)
   });
   await res.text();
@@ -241,4 +244,155 @@ test('11: Footer Finality & Clean Boundary', async () => {
   // Verify terms container is cleanly removed as requested
   assert.strictEqual(html.includes('launch-terms-container'), false, 'Terms container must not be present');
   assert.strictEqual(html.includes('id="terms-modal"'), false, 'Terms modal must not be present');
+});
+
+test('12: Anti-Spam Defense - Timestamp Verification (<2.5s Bot Rejection) & Honeypot', async () => {
+  const server = createProductionServer();
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+
+  // 1. Rapid submission (<2.5s after page load) -> Bot trapped
+  const fastSubmission = {
+    firstName: 'SpeedyBot',
+    lastName: 'Tester',
+    email: 'speedy@spam.com',
+    description: 'Instant spam payload submission',
+    _timestamp: Date.now() - 500 // 500ms ago -> bot!
+  };
+
+  const fastRes = await fetch(`http://localhost:${port}/api/contact`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Forwarded-For': '198.51.100.12'
+    },
+    body: JSON.stringify(fastSubmission)
+  });
+  const fastBody = await fastRes.json();
+  assert.strictEqual(fastRes.status, 200, 'Bot submission should return 200 to drop silently');
+  assert.strictEqual(fastBody.success, true);
+
+  // 2. Legitimate submission (>2.5s after page load)
+  const legitSubmission = {
+    firstName: 'HumanUser',
+    lastName: 'Legitimate',
+    email: 'human@example.com',
+    description: 'Legitimate detailed client inquiry for portfolio',
+    _timestamp: Date.now() - 5000 // 5s ago -> human!
+  };
+
+  const legitRes = await fetch(`http://localhost:${port}/api/contact`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Forwarded-For': '198.51.100.13'
+    },
+    body: JSON.stringify(legitSubmission)
+  });
+  const legitBody = await legitRes.json();
+  assert.strictEqual(legitRes.status, 200);
+  assert.strictEqual(legitBody.success, true);
+  assert.ok(legitBody.id, 'Legitimate submission should return record id');
+
+  await new Promise(resolve => server.close(resolve));
+});
+
+test('13: Contact Form Rate Limiting (Max 3 submissions per IP per 10 minutes)', async () => {
+  const server = createProductionServer();
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+  const testIp = '198.51.100.42'; // Dedicated IP for rate test
+
+  const sendWithIp = (num) => fetch(`http://localhost:${port}/api/contact`, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-Forwarded-For': testIp
+    },
+    body: JSON.stringify({
+      firstName: `Tester${num}`,
+      email: `tester${num}@example.com`,
+      description: 'Testing rate limit enforcement',
+      _timestamp: Date.now() - 6000
+    })
+  });
+
+  // Requests 1, 2, 3 should succeed
+  const res1 = await sendWithIp(1);
+  assert.strictEqual(res1.status, 200, 'Request 1 should succeed');
+  const res2 = await sendWithIp(2);
+  assert.strictEqual(res2.status, 200, 'Request 2 should succeed');
+  const res3 = await sendWithIp(3);
+  assert.strictEqual(res3.status, 200, 'Request 3 should succeed');
+
+  // Request 4 should be rejected with 429
+  const res4 = await sendWithIp(4);
+  assert.strictEqual(res4.status, 429, 'Request 4 within window must be rate-limited (HTTP 429)');
+  const body4 = await res4.json();
+  assert.strictEqual(body4.success, false);
+  assert.ok(res4.headers.get('retry-after'), 'Retry-After header must be present on 429');
+
+  await new Promise(resolve => server.close(resolve));
+});
+
+test('14: vercel.json Security & Cache-Control Configuration', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const vercel = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8'));
+
+  assert.ok(Array.isArray(vercel.headers), 'vercel.json must define headers array');
+
+  // Check global security headers rule
+  const globalRule = vercel.headers.find(h => h.source === '/(.*)');
+  assert.ok(globalRule, 'Global headers rule for /(.*) must exist');
+
+  const headerKeys = globalRule.headers.map(h => h.key.toLowerCase());
+  assert.ok(headerKeys.includes('content-security-policy'), 'CSP must be defined in vercel.json');
+  assert.ok(headerKeys.includes('x-frame-options'), 'X-Frame-Options must be defined in vercel.json');
+  assert.ok(headerKeys.includes('x-content-type-options'), 'X-Content-Type-Options must be defined in vercel.json');
+  assert.ok(headerKeys.includes('referrer-policy'), 'Referrer-Policy must be defined in vercel.json');
+  assert.ok(headerKeys.includes('permissions-policy'), 'Permissions-Policy must be defined in vercel.json');
+  assert.ok(headerKeys.includes('strict-transport-security'), 'HSTS must be defined in vercel.json');
+
+  // Check static asset long-term caching rule
+  const cacheRule = vercel.headers.find(h => h.headers.some(hdr => hdr.key.toLowerCase() === 'cache-control' && hdr.value.includes('immutable')));
+  assert.ok(cacheRule, 'A long-term immutable Cache-Control rule must exist for static assets in vercel.json');
+});
+
+test('15: Dual-Track ATS Resumes & Engineering Project Callouts', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  // Verify dual-track PDF files exist on disk
+  const fullstackPdf = path.join(__dirname, '..', 'Ahmed_Musthaffa_FullStack_AI_Resume.pdf');
+  const agenticPdf = path.join(__dirname, '..', 'Ahmed_Musthaffa_Agentic_AI_Resume.pdf');
+  assert.ok(fs.existsSync(fullstackPdf), 'Ahmed_Musthaffa_FullStack_AI_Resume.pdf must exist');
+  assert.ok(fs.existsSync(agenticPdf), 'Ahmed_Musthaffa_Agentic_AI_Resume.pdf must exist');
+
+  // Verify index.html references the ATS-compliant resume files
+  assert.ok(html.includes('Ahmed_Musthaffa_FullStack_AI_Resume.pdf'), 'index.html must link to FullStack AI resume');
+  assert.ok(html.includes('Ahmed_Musthaffa_Agentic_AI_Resume.pdf'), 'index.html must link to Agentic AI resume');
+
+  // Verify quantified architecture callouts for GovAgent MCP & PitchCraft AI
+  assert.ok(html.includes('LangGraph') && html.includes('Unity Catalog'), 'GovAgent MCP architecture callouts must be present');
+  assert.ok(html.includes('Rate Limiting') || html.includes('rate limiting'), 'Rate limiting metric must be present');
+});
+
+test('16: SEO, OpenGraph Metadata & JSON-LD Structured Data', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  // OpenGraph & Twitter Card
+  assert.ok(html.includes('property="og:title" content="Ahmed Musthaffa — Full-Stack &amp; Agentic AI Systems Engineer"') ||
+            html.includes('property="og:title" content="Ahmed Musthaffa — Full-Stack & Agentic AI Systems Engineer"'), 'og:title must match standard');
+  assert.ok(html.includes('property="og:description"'), 'og:description must be present');
+  assert.ok(html.includes('name="twitter:card" content="summary_large_image"'), 'twitter:card must be summary_large_image');
+
+  // JSON-LD Schema
+  assert.ok(html.includes('"@type": "Person"'), 'JSON-LD must include Person schema');
+  assert.ok(html.includes('"@type": "ProfilePage"'), 'JSON-LD must include ProfilePage schema');
+  assert.ok(html.includes('Ahmed Musthaffa'), 'Schema must declare Ahmed Musthaffa');
+  assert.ok(html.includes('sameAs'), 'Schema must declare sameAs social profiles');
 });

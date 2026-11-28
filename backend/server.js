@@ -117,10 +117,11 @@ function createProductionServer() {
       const ext = path.extname(filePath).toLowerCase();
       const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
+      const isImmutableAsset = ['.webp', '.avif', '.png', '.jpg', '.jpeg', '.svg', '.pdf', '.mp4', '.woff2', '.woff', '.ttf'].includes(ext);
       res.writeHead(200, {
         'Content-Type': contentType,
         'Content-Length': stats.size,
-        'Cache-Control': ext === '.html' ? 'no-cache' : 'public, max-age=86400'
+        'Cache-Control': ext === '.html' ? 'no-cache' : (isImmutableAsset ? 'public, max-age=31536000, immutable' : 'public, max-age=86400')
       });
 
       const stream = fs.createReadStream(filePath);
