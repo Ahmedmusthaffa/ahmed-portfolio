@@ -104,6 +104,8 @@
   </script>
 
   <link rel="stylesheet" href="styles.css?v=5.6">
+  <!-- Cloudflare Turnstile Bot Defense -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <!-- Core Web Vitals: Preload Above-the-Fold Initial Frame -->
   <link rel="preload" as="image" href="background video-hd/frame-024.webp" fetchpriority="high" type="image/webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -668,6 +670,9 @@
                 <label class="form-label">Project Description *</label>
                 <textarea id="contact-description" name="description" class="form-textarea" rows="3" placeholder="Tell me about your project, goals, or requirements..." required></textarea>
               </div>
+
+              <!-- Cloudflare Turnstile Spam Protection Widget -->
+              <div class="cf-turnstile" id="cf-turnstile" data-sitekey="1x00000000000000000000AA" data-theme="dark" style="margin-bottom: 0.8rem; display: flex; justify-content: center;"></div>
 
               <button type="submit" id="form-submit-btn" class="form-submit-btn">
                 <span>Submit Request</span>

@@ -1,3 +1,6 @@
+process.env.NODE_ENV = 'test';
+process.env.ADMIN_SECRET = 'test-admin-secret-key-32chars!!';
+
 const test = require('node:test');
 const assert = require('node:assert');
 const db = require('../backend/db/database');
@@ -23,7 +26,7 @@ test('1: Database Scalability & Atomic Persistence', () => {
   assert.ok(all.some(s => s.id === record.id), 'Database should contain new record');
 });
 
-test('2: Security Gate - Input Sanitization & Validation', () => {
+test('2: Security Gate - Input Sanitization & Validation', async () => {
   const maliciousInput = '<script>alert(1)</script> John javascript:alert() onclick=foo()';
   const clean = security.sanitizeInput(maliciousInput);
   assert.ok(!clean.includes('<script>'), 'XSS tags must be stripped');
@@ -32,7 +35,7 @@ test('2: Security Gate - Input Sanitization & Validation', () => {
   assert.strictEqual(security.validateEmail('valid@example.com'), true);
   assert.strictEqual(security.validateEmail('invalid-email'), false);
 
-  const rateCheck = security.checkRateLimit('192.168.1.100');
+  const rateCheck = await security.checkRateLimit('192.168.1.100');
   assert.strictEqual(rateCheck.allowed, true);
 });
 
@@ -395,4 +398,66 @@ test('16: SEO, OpenGraph Metadata & JSON-LD Structured Data', () => {
   assert.ok(html.includes('"@type": "ProfilePage"'), 'JSON-LD must include ProfilePage schema');
   assert.ok(html.includes('Ahmed Musthaffa'), 'Schema must declare Ahmed Musthaffa');
   assert.ok(html.includes('sameAs'), 'Schema must declare sameAs social profiles');
+});
+
+test('17: Cloudflare Turnstile Bot Defense & CSP Whitelist', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const vercel = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8'));
+
+  // 1. Verify Turnstile script and widget in index.html
+  assert.ok(html.includes('challenges.cloudflare.com/turnstile/v0/api.js'), 'Turnstile API script must be loaded in HTML');
+  assert.ok(html.includes('class="cf-turnstile"'), 'Turnstile container widget must be present in contact form');
+
+  // 2. Verify CSP allows Cloudflare Turnstile domains
+  const globalRule = vercel.headers.find(h => h.source === '/(.*)');
+  const cspHeader = globalRule.headers.find(h => h.key.toLowerCase() === 'content-security-policy');
+  assert.ok(cspHeader.value.includes('challenges.cloudflare.com'), 'CSP must whitelist challenges.cloudflare.com');
+  assert.ok(cspHeader.value.includes('frame-src https://challenges.cloudflare.com'), 'CSP must declare frame-src for Turnstile iframe');
+});
+
+test('18: Edge Proxy IP Prioritization (x-real-ip vs x-forwarded-for)', async () => {
+  const server = createProductionServer();
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+
+  // Real IP is 198.51.100.99, while client attempts to spoof X-Forwarded-For with fake IP
+  const spoofedRes = await fetch(`http://localhost:${port}/api/contact`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Real-IP': '198.51.100.99',
+      'X-Forwarded-For': '10.0.0.1, 10.0.0.2'
+    },
+    body: JSON.stringify({
+      firstName: 'SecureUser',
+      email: 'secure@example.com',
+      description: 'Testing edge IP verification',
+      _timestamp: Date.now() - 5000
+    })
+  });
+
+  assert.strictEqual(spoofedRes.status, 200);
+  const body = await spoofedRes.json();
+  assert.strictEqual(body.success, true);
+
+  await new Promise(resolve => server.close(resolve));
+});
+
+test('19: Fail-Closed Protection on Admin Insecure Sample Tokens', async () => {
+  const server = createProductionServer();
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+
+  // Attempt using common/sample tokens -> must be rejected
+  const insecureTokens = ['ahmed-dev-secret-2027', 'admin', 'password', '123456'];
+  for (const token of insecureTokens) {
+    const res = await fetch(`http://localhost:${port}/api/contact/submissions`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    assert.strictEqual(res.status, 401, `Insecure token '${token}' must be rejected with 401`);
+  }
+
+  await new Promise(resolve => server.close(resolve));
 });

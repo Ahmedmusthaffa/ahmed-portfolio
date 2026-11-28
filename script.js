@@ -548,6 +548,8 @@
         return;
       }
 
+      const turnstileToken = document.querySelector('[name="cf-turnstile-response"]')?.value || '';
+
       const payload = {
         firstName: document.getElementById('contact-first-name')?.value.trim() || '',
         lastName: document.getElementById('contact-last-name')?.value.trim() || '',
@@ -555,7 +557,8 @@
         phone: document.getElementById('contact-phone')?.value.trim() || '',
         description: document.getElementById('contact-description')?.value.trim() || '',
         _gotcha: gotchaVal,
-        _timestamp: pageLoadTime
+        _timestamp: pageLoadTime,
+        turnstileToken: turnstileToken
       };
 
       const clientName = `${payload.firstName} ${payload.lastName}`.trim() || 'Client';

@@ -16,15 +16,16 @@ const cleanupTimer = setInterval(() => {
 cleanupTimer.unref();
 
 function applySecurityHeaders(res) {
-  // 1. Strict Content-Security-Policy (CSP Level 3)
+  // 1. Strict Content-Security-Policy (CSP Level 3) including Cloudflare Turnstile
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://challenges.cloudflare.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https: blob:",
     "media-src 'self' data: blob:",
-    "connect-src 'self' https:",
+    "connect-src 'self' https: https://challenges.cloudflare.com",
+    "frame-src https://challenges.cloudflare.com",
     "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",
@@ -64,8 +65,43 @@ function sanitizeIp(ip) {
   return first.replace(/[^a-fA-F0-9:.]/g, '').slice(0, 45) || '127.0.0.1';
 }
 
-function checkRateLimit(rawIp) {
+async function checkRateLimit(rawIp) {
   const ip = sanitizeIp(rawIp);
+
+  // Distributed Serverless Rate Limiting via Upstash Redis REST API (Atomic multi-container sync)
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (upstashUrl && upstashToken && typeof fetch === 'function') {
+    try {
+      const key = `ratelimit:${ip}`;
+      const expireSec = Math.ceil(config.rateLimitWindowMs / 1000);
+      const res = await fetch(`${upstashUrl}/pipeline`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${upstashToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify([
+          ['INCR', key],
+          ['EXPIRE', key, expireSec]
+        ])
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const count = data[0]?.result || 1;
+        if (count > config.rateLimitMax) {
+          return { allowed: false, remaining: 0, retryAfter: expireSec };
+        }
+        return { allowed: true, remaining: Math.max(0, config.rateLimitMax - count) };
+      }
+    } catch (err) {
+      console.warn('[Security] Upstash Redis rate limiter error, falling back to local memory:', err.message);
+    }
+  }
+
+  // Resilient In-Memory Fallback
   const now = Date.now();
   let record = ipHits.get(ip);
   if (!record || (now - record.resetTime > config.rateLimitWindowMs)) {

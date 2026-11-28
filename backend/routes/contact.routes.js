@@ -4,7 +4,7 @@ const analytics = require('../services/analytics');
 const security = require('../middleware/security');
 const config = require('../config/env');
 
-function handleContactRoutes(req, res, clientIp) {
+async function handleContactRoutes(req, res, clientIp) {
   if (req.method === 'POST' && req.url === '/api/contact') {
     // 1. DoS Protection: Reject oversized payloads immediately before consuming rate limit
     const contentLength = parseInt(req.headers['content-length'] || '0', 10);
@@ -16,7 +16,7 @@ function handleContactRoutes(req, res, clientIp) {
       }));
     }
 
-    const rateCheck = security.checkRateLimit(clientIp);
+    const rateCheck = await security.checkRateLimit(clientIp);
     if (!rateCheck.allowed) {
       res.writeHead(429, { 
         'Content-Type': 'application/json',
@@ -43,6 +43,31 @@ function handleContactRoutes(req, res, clientIp) {
             console.warn(`💖 [BOT TRAP] Blocked rapid bot submission (${elapsed}ms < 2500ms)`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             return res.end(JSON.stringify({ success: true, message: 'Thank you!' }));
+          }
+        }
+
+        // Cloudflare Turnstile Bot Defense Verification
+        const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+        const turnstileToken = payload.turnstileToken || payload['cf-turnstile-response'];
+        if (turnstileSecret && config.nodeEnv === 'production') {
+          if (!turnstileToken) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ success: false, error: 'Security challenge response missing. Please try again.' }));
+          }
+          try {
+            const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: `secret=${encodeURIComponent(turnstileSecret)}&response=${encodeURIComponent(turnstileToken)}&remoteip=${encodeURIComponent(clientIp)}`
+            });
+            const verifyData = await verifyRes.json();
+            if (!verifyData.success) {
+              console.warn('[Turnstile] Bot verification failed:', verifyData['error-codes']);
+              res.writeHead(403, { 'Content-Type': 'application/json' });
+              return res.end(JSON.stringify({ success: false, error: 'Security verification failed. Please try again.' }));
+            }
+          } catch (err) {
+            console.warn('[Turnstile] Verification check bypassed due to network error:', err.message);
           }
         }
 
@@ -107,10 +132,28 @@ function handleContactRoutes(req, res, clientIp) {
       return res.end(JSON.stringify({ success: false, error: 'Query parameter authentication forbidden. Use Bearer header.' }));
     }
 
+    // Fail-Closed Security Guard: Reject known sample or insecure placeholder secrets in production
+    const isProduction = config.nodeEnv === 'production';
+    const knownInsecureSecrets = ['ahmed-dev-secret-2027', 'admin', 'password', 'secret', '123456'];
+    if (isProduction && (!process.env.ADMIN_SECRET || knownInsecureSecrets.includes(config.adminSecret))) {
+      console.error('[Security Alert] Admin endpoint disabled: High-entropy ADMIN_SECRET must be set in production environment variables.');
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ 
+        success: false, 
+        error: 'Unauthorized: Production ADMIN_SECRET environment variable is required.' 
+      }));
+    }
+
     const authHeader = req.headers['authorization'] || '';
     const match = authHeader.match(/^Bearer\s+(.+)$/i);
     const providedToken = match ? match[1].trim() : '';
     
+    // Immediately reject known default or insecure sample tokens
+    if (knownInsecureSecrets.includes(providedToken)) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: 'Unauthorized: Insecure token rejected' }));
+    }
+
     // Constant-time timing-safe comparison against configured adminSecret
     if (!providedToken || !config.adminSecret || !security.timingSafeCompare(providedToken, config.adminSecret)) {
       res.writeHead(401, { 'Content-Type': 'application/json' });
