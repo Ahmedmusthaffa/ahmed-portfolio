@@ -28,7 +28,11 @@ const MIME_TYPES = {
 function createProductionServer() {
   const server = http.createServer((req, res) => {
     const startTime = Date.now();
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    // Security: Prioritize trusted edge proxy header 'x-real-ip' over user-controllable 'x-forwarded-for'
+    const clientIp = req.headers['x-real-ip'] || 
+                     (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : '') || 
+                     req.socket.remoteAddress || 
+                     '127.0.0.1';
 
     // 1. Security Headers
     security.applySecurityHeaders(res);

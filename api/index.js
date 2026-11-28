@@ -11,7 +11,11 @@ module.exports = async (req, res) => {
     return res.end();
   }
 
-  const clientIp = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.socket.remoteAddress || '127.0.0.1';
+  // Security: Prioritize trusted edge proxy header 'x-real-ip' over user-controllable 'x-forwarded-for'
+  const clientIp = req.headers['x-real-ip'] || 
+                   (req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(',')[0].trim() : '') || 
+                   req.socket.remoteAddress || 
+                   '127.0.0.1';
 
   if (req.url === '/linkedin' || req.url === '/linkedin/') {
     res.statusCode = 302;
